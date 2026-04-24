@@ -289,7 +289,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 <div class="screen active" id="screen-search">
   <div class="screen-title">부품 검색</div>
-  <div class="screen-sub" id="hdr-sub">고객사 · 장비 · Unit으로 구매품 조회</div>
+  <div class="screen-sub" id="hdr-sub">제작자 : CMP제조기술팀 강해원</div>
   <div class="filter-grid">
     <div class="filter-box"><div class="filter-label">Module</div><div class="sw"><select class="filter-select" id="fc"><option value="">전체</option></select></div></div>
     <div class="filter-box"><div class="filter-label">장비군</div><div class="sw"><select class="filter-select" id="fg"><option value="">전체</option></select></div></div>
@@ -348,7 +348,7 @@ const GH={
 let DB=JSON.parse(localStorage.getItem(K.data)||'[]');
 let IMGS=JSON.parse(localStorage.getItem(K.img)||'{}');
 let HS=JSON.parse(localStorage.getItem(K.hs)||'{}');
-let UI=JSON.parse(localStorage.getItem(K.ui)||'{"title":"부품 검색 시스템","sub":"고객사 · 장비 · Unit으로 구매품 조회"}');
+let UI=JSON.parse(localStorage.getItem(K.ui)||'{"title":"부품 검색 시스템","sub":"제작자 : CMP제조기술팀 강해원"}');
 let curGroup=null,curEquip=null;
 let _lastResults=[],_lastParts=[];
 
@@ -656,7 +656,7 @@ refreshFilters();
 const K_LAYOUT = 'eq_v6_layout';
 const DEFAULT_LAYOUT = {
   searchTitle: '부품 검색',
-  searchSub: '고객사 · 장비 · Unit으로 구매품 조회',
+  searchSub: '제작자 : CMP제조기술팀 강해원',
   searchBtn: '🔍 검색',
   filters: [
     {key:'customer', label:'Module',     visible:true,  full:false},
