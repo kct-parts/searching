@@ -3,8 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>KCTECH 부품 검색 시스템</title>
+<title>KC TECH 부품 검색 시스템</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+        integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"
+        onerror="(function(){var b=document.createElement('div');b.style.cssText='position:fixed;top:0;left:0;right:0;background:#CC1B1B;color:#fff;padding:10px 14px;font:13px/1.5 sans-serif;text-align:center;z-index:9999';b.textContent='⚠️ 엑셀 라이브러리를 불러오지 못했습니다. 엑셀 업로드·내보내기 기능이 동작하지 않습니다. 새로고침하거나 인터넷 연결을 확인하세요.';document.body&&document.body.appendChild(b);window.__XLSX_FAILED__=true;})();"></script>
 <script id="__kc_guard__">
 /* KC TECH source-protection guard (3 layers) — mobile-safe, recoverable */
 (function(){
@@ -284,6 +288,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <span class="header-title" id="hdr-title">부품 검색 시스템</span>
   <div class="header-right">
     <span id="sync-badge" style="font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid rgba(130,130,130,0.3);background:rgba(100,100,100,0.1);color:var(--text2);white-space:nowrap;cursor:pointer;font-weight:600;user-select:none;" onclick="fetchFromGitHub({force:true})" title="클릭하여 GitHub에서 새로 불러오기">⚪ 대기</span>
+    <span class="master-badge" id="master-badge">MASTER</span>
+    <button class="btn-logout" id="btn-logout" onclick="logout()">로그아웃</button>
+    <button class="btn-manage" onclick="switchTab('admin')">관리</button>
   </div>
 </div>
 
@@ -312,7 +319,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   </div>
   <div id="empty-msg" class="empty-state">
     <div class="icon">📬</div>
-    <p>데이터를 불러오는 중입니다...</p>
+    <p>관리자에서 데이터를 업로드하세요</p>
   </div>
 </div>
 
@@ -323,11 +330,129 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
   <div class="unit-img-container">
     <div class="unit-img-wrapper" id="uiw"></div>
-    <div class="unit-tip" id="unit-tip">등록된 이미지가 없습니다</div>
+    <div class="unit-tip" id="unit-tip">관리 탭에서 이미지를 업로드하세요</div>
   </div>
   <div class="parts-list" id="upl"></div>
 </div>
 
+<div class="screen" id="screen-admin">
+  <div class="screen-title">관리</div>
+  <div class="screen-sub">Master 전용 데이터 관리</div>
+  <div id="admin-locked">
+    <div class="admin-locked-box">
+      <div style="font-size:40px;margin-bottom:14px">🔐</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:8px">관리자 전용 영역</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.7">엑셀 업로드, 이미지 설정, 데이터 관리는<br>Master 계정으로만 접근 가능합니다.</div>
+      <button id="admin-login-btn" style="background:var(--accent-light);border:1px solid rgba(204,27,27,0.45);color:var(--accent);border-radius:10px;padding:12px 26px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="openLoginModal()">🔑 Master 로그인</button>
+    </div>
+  </div>
+  <div id="admin-content" style="display:none">
+    <div class="admin-section">
+      <div class="section-title">☁️ GitHub 동기화 <span class="lock-badge">MASTER</span></div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.6">저장소: <b style="color:var(--text)">kct-parts/searching</b> · 파일: <code>data.json</code><br>읽기 전용 모드 — 앱 로드 시 자동으로 GitHub에서 최신 데이터를 받아옵니다.</div>
+      <div id="gh-info" style="font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:10px">상태: <span id="gh-info-state">-</span></div>
+      <button class="btn-add" onclick="fetchFromGitHub({force:true})">🔄 GitHub에서 새로 가져오기</button>
+      <button class="btn-add" style="margin-top:6px;background:rgba(74,144,217,0.1);border-color:rgba(74,144,217,0.3);color:var(--blue)" onclick="exportDataJson()">📤 data.json 내보내기 (GitHub 업로드용)</button>
+      <div style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6;padding:8px 10px;background:rgba(74,144,217,0.05);border-left:3px solid var(--blue);border-radius:4px">💡 <b>사용법</b>: 로컬에서 엑셀 업로드/수정 → 📤 data.json 내보내기 → GitHub 저장소에 업로드 → 모든 사용자가 새로고침하면 자동 반영</div>
+    </div>
+    <div class="admin-section">
+      <div class="section-title">📦 배포용 파일 내보내기 <span class="lock-badge">MASTER</span></div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">모든 데이터·이미지·설정이 내장된 HTML 파일을 생성합니다.<br>⚠️ 생성된 파일은 <b>관리 모드가 완전히 제거된 조회 전용</b>입니다.</div>
+      <button class="btn-export" onclick="exportApp('internal')">⬇️ 사내 배포용 HTML 생성 (타임스탬프)</button>
+      <button class="btn-export" style="margin-top:8px;background:rgba(74,144,217,0.12);border-color:rgba(74,144,217,0.4);color:var(--blue)" onclick="exportApp('github')">🌐 GitHub 배포용 생성 (index.html)</button>
+      <hr class="divider">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.6">🔒 <b>잠금 파일</b>은 <b>관리 모드를 유지</b>한 채 소스 난독화 + 가드 3종이 모두 적용된 백업용입니다.<br>(원본이 평문으로 노출되길 원치 않을 때 사용)</div>
+      <button class="btn-export" style="background:rgba(204,27,27,0.12);border-color:rgba(204,27,27,0.4);color:var(--accent)" onclick="generateLockedFile()">🔒 잠금 파일 재생성 (관리 모드 유지)</button>
+    </div>
+    <div class="admin-section">
+      <div class="section-title">💾 자체 저장 (현재 HTML에 직접 기록) <span class="lock-badge">MASTER</span></div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.6">Chrome/Edge 전용. 이 HTML 파일 자체에 데이터를 기록해 별도 저장소 없이 파일 한 개로 쓰도록 합니다.</div>
+      <div id="fsa-status" style="font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:10px">연결 상태: <span id="fsa-state">미연결</span></div>
+      <button class="btn-add" onclick="linkSelfFile()">🔗 이 파일과 연결 (최초 1회)</button>
+      <button class="btn-add" style="margin-top:6px;background:rgba(74,144,217,0.1);border-color:rgba(74,144,217,0.3);color:var(--blue)" onclick="saveToSelfNow()">💾 지금 파일에 저장</button>
+      <button class="btn-danger" style="margin-top:6px" onclick="unlinkSelfFile()">🔌 연결 해제</button>
+    </div>
+    <div class="admin-section">
+      <div class="section-title">📊 엑셀 파일 업로드 <span class="lock-badge">MASTER</span></div>
+      <div class="upload-box">
+        <input type="file" id="xlsx-inp" accept=".xlsx,.xls" onchange="handleXLSX(this)">
+        <div class="upload-icon">📗</div>
+        <div class="upload-title">엑셀 파일 선택 또는 드래그</div>
+        <div class="upload-sub">.xlsx · .xls 형식 지원</div>
+      </div>
+      <div class="upload-status" id="xlsx-st"></div>
+      <div class="xlsx-tpl">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:600">📋 엑셀 1행 헤더 (순서 무관, 아래 컬럼명 사용)</div>
+        <div class="col-chips">
+          <span class="col-chip">Module</span><span class="col-chip">장비군</span><span class="col-chip">장비명</span>
+          <span class="col-chip">Unit</span><span class="col-chip">구분</span><span class="col-chip">품목코드</span>
+          <span class="col-chip">부품종류</span><span class="col-chip">부품명</span><span class="col-chip">모델명</span>
+          <span class="col-chip">제조사</span><span class="col-chip">사양</span>
+        </div>
+        <button class="btn-dl" onclick="dlTemplate()">⬇️ 엑셀 양식 다운로드</button>
+      </div>
+      <hr class="divider">
+      <button class="btn-danger" onclick="clearAll()">🗑️ 전체 데이터 초기화</button>
+    </div>
+    <div class="admin-section">
+      <div class="section-title">🖼️ 장비 이미지 업로드 <span class="lock-badge">MASTER</span></div>
+      <div class="form-row">
+        <label>이미지를 연결할 장비명</label>
+        <div style="position:relative;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+          <select class="filter-select" id="img-eq-sel" onchange="onEquipSelChange()"><option value="">장비 선택...</option></select>
+          <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text2);pointer-events:none">▾</span>
+        </div>
+      </div>
+      <div class="upload-box">
+        <input type="file" id="img-inp" accept="image/*" onchange="handleImg(this)">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-title">장비 이미지 선택</div>
+        <div class="upload-sub">JPG · PNG · 2MB 이하 권장</div>
+      </div>
+      <div class="upload-status" id="img-st"></div>
+      <div class="img-preview-box" id="ipb">
+        <img id="iprev" src="" alt="">
+        <div class="img-preview-info"><span id="iname">-</span><button class="btn-rm-img" onclick="removeImg()">✕ 삭제</button></div>
+      </div>
+      <hr class="divider">
+      <button class="btn-add" id="btn-hs" onclick="openHSEditor()" style="display:none">📍 부품 위치 핀 설정</button>
+    </div>
+    <div class="admin-section">
+      <div class="section-title">➕ 부품 직접 추가</div>
+      <div class="form-grid">
+        <div class="form-row"><label>Module</label><input class="form-input" id="ac" placeholder="삼성전자"/></div>
+        <div class="form-row"><label>장비군</label><input class="form-input" id="ag" placeholder="CNC 가공기"/></div>
+        <div class="form-row"><label>장비명</label><input class="form-input" id="ae" placeholder="CNC-3000"/></div>
+        <div class="form-row"><label>Unit</label><input class="form-input" id="au" placeholder="스핀들"/></div>
+        <div class="form-row"><label>구분</label><select class="form-input" id="adv"><option value="">(선택)</option><option value="전장">전장</option><option value="배관">배관</option><option value="기구">기구</option></select></div>
+        <div class="form-row"><label>품목코드</label><input class="form-input" id="aic" placeholder="KC-001-A"/></div>
+        <div class="form-row"><label>부품종류</label><input class="form-input" id="apt" placeholder="베어링"/></div>
+        <div class="form-row"><label>부품명 *</label><input class="form-input" id="ap" placeholder="볼베어링"/></div>
+        <div class="form-row"><label>모델명 *</label><input class="form-input" id="am" placeholder="6305-2RS"/></div>
+        <div class="form-row"><label>제조사</label><input class="form-input" id="amk" placeholder="NSK"/></div>
+      </div>
+      <div class="form-row"><label>사양</label><input class="form-input" id="as2" placeholder="내경:25mm, 외경:62mm"/></div>
+      <button class="btn-add" onclick="addPart()" style="margin-top:6px">＋ 부품 추가</button>
+    </div>
+    <div class="admin-section">
+      <div class="section-title">등록 데이터 (<span id="dcount">0</span>건)</div>
+      <div id="dlist" class="data-list"></div>
+    </div>
+    <div class="admin-section">
+      <div class="section-title">⚙️ Master 설정 <span class="lock-badge">MASTER</span></div>
+      <div class="settings-row"><div><div class="settings-label">앱 이름</div><div class="settings-sub">헤더 타이틀</div></div><button class="btn-edit" onclick="openEdit('title')">수정</button></div>
+      <div class="settings-row"><div><div class="settings-label">서브 타이틀</div><div class="settings-sub">검색 화면 설명</div></div><button class="btn-edit" onclick="openEdit('sub')">수정</button></div>
+      <div class="settings-row"><div><div class="settings-label">Master 아이디</div><div class="settings-sub" id="show-id"></div></div><button class="btn-edit" onclick="openChangeCred('id')">변경</button></div>
+      <div class="settings-row"><div><div class="settings-label">Master 비밀번호</div><div class="settings-sub">현재 비번 확인 후 변경</div></div><button class="btn-edit" onclick="openChangeCred('pw')">변경</button></div>
+    </div>
+
+    <div class="admin-section">
+      <div class="section-title">🎨 화면 레이아웃 편집 <span class="lock-badge">MASTER</span></div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">검색탭 필터 순서·표시 여부·라벨명과<br>Unit 시각화 화면 텍스트를 자유롭게 편집합니다.</div>
+      <button class="btn-add" onclick="openLayoutEditor()">✏️ 화면 편집 모드 열기</button>
+    </div>
+  </div>
+</div>
 
 
 <!-- PAGE LAYOUT EDITOR -->
@@ -416,10 +541,55 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <div class="nav-item" id="nav-unit" onclick="switchTab('unit')">
     <div class="nav-icon">⊞</div><div class="nav-label">Unit 시각화</div>
   </div>
+  <div class="nav-item" id="nav-admin" onclick="switchTab('admin')">
+    <div class="nav-icon">👤</div><div class="nav-label">관리</div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="dmodal" onclick="if(event.target===this)closeDModal()">
   <div class="modal"><div class="modal-handle"></div><div class="modal-title" id="mt"></div><div class="modal-model" id="mm"></div><table class="spec-table" id="ms"></table><button class="modal-close" onclick="closeDModal()">닫기</button></div>
+</div>
+<div class="modal-overlay center" id="login-modal">
+  <div class="modal-center">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">Master 로그인</div>
+    <div class="login-sub">관리자 계정으로 로그인하세요</div>
+    <div class="login-err" id="login-err">아이디 또는 비밀번호가 틀렸습니다.</div>
+    <div class="login-field"><label>아이디</label><input class="login-input" id="li-id" type="text" autocomplete="off"/></div>
+    <div class="login-field"><label>비밀번호</label><input class="login-input" id="li-pw" type="password"/></div>
+    <button class="btn-login" onclick="doLogin()">로그인</button>
+    <button class="btn-cancel" onclick="document.getElementById('login-modal').classList.remove('active')">취소</button>
+  </div>
+</div>
+<div class="modal-overlay center" id="cred-modal">
+  <div class="modal-center">
+    <div class="login-title" id="cred-title"></div>
+    <div style="font-size:12px;color:var(--text2);text-align:center;margin-bottom:14px" id="cred-sub"></div>
+    <div class="login-err" id="cred-err"></div>
+    <div id="cred-fields"></div>
+    <button class="btn-login" onclick="doChangeCred()">변경하기</button>
+    <button class="btn-cancel" onclick="document.getElementById('cred-modal').classList.remove('active')">취소</button>
+  </div>
+</div>
+<div class="modal-overlay center" id="edit-modal">
+  <div class="modal-center">
+    <div class="login-title" id="edit-title"></div>
+    <div style="margin:14px 0"><div id="edit-preview" style="display:none" class="app-name-preview"></div><input class="login-input" id="edit-val" type="text" style="margin-top:8px"/></div>
+    <button class="btn-login" onclick="doEditSave()">저장</button>
+    <button class="btn-cancel" onclick="document.getElementById('edit-modal').classList.remove('active')">취소</button>
+  </div>
+</div>
+<div class="modal-overlay" id="hsmodal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="imgmap-modal">
+    <div class="modal-handle"></div>
+    <div class="imgmap-title">📍 부품 위치 핀 설정</div>
+    <div class="imgmap-tip">이미지를 <strong>탭</strong>하면 핀 추가 · 핀을 <strong>드래그</strong>하여 위치 조정</div>
+    <div class="imgmap-img-wrap" id="hs-imgwrap"></div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:600">핀별 부품 정보</div>
+    <div class="hotspot-list" id="hs-list"></div>
+    <button class="btn-add-hs" onclick="addHSRow()">＋ 핀 추가</button>
+    <button class="btn-save-hs" onclick="saveHS()">✅ 저장하기</button>
+  </div>
 </div>
 
 <script>
@@ -438,15 +608,79 @@ const GH={
 let DB=JSON.parse(localStorage.getItem(K.data)||'[]');
 let IMGS=JSON.parse(localStorage.getItem(K.img)||'{}');
 let HS=JSON.parse(localStorage.getItem(K.hs)||'{}');
+// AUTH structure: {id, salt, hash} (hashed) | {id, pw} (legacy, auto-upgraded on login) | null (unset → setup modal)
+let AUTH=JSON.parse(localStorage.getItem(K.auth)||'null');
 let UI=JSON.parse(localStorage.getItem(K.ui)||'{"title":"부품 검색 시스템","sub":"고객사 · 장비 · Unit으로 구매품 조회"}');
-let curGroup=null,curEquip=null;
-let _lastResults=[],_lastParts=[];
+let isMaster=false,curGroup=null,curEquip=null,editEquip=null,tempHS=[],editTarget=null,credMode='';
+let _lastResults=[],_lastParts=[];               // XSS-safe index-based onclick lookups
+let _idleTimer=null;                              // 30-min auto-logout
+const IDLE_MS=30*60*1000;
+const MAX_LOGIN_FAIL=5, LOCK_MS=60*1000;
+let _loginFail=+(sessionStorage.getItem('eq_login_fail')||0);
+let _lockUntil=+(sessionStorage.getItem('eq_lock_until')||0);
 
 // ── XSS-safe output helpers ──
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
 
 // ── Crypto helpers (SHA-256 + 128-bit salt) ──
+function randomSalt(){const a=new Uint8Array(16);crypto.getRandomValues(a);return Array.from(a).map(b=>b.toString(16).padStart(2,'0')).join('');}
+async function hashPW(pw,salt){const enc=new TextEncoder();const buf=await crypto.subtle.digest('SHA-256',enc.encode(salt+':'+pw));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+async function verifyAuthPW(pw){
+  if(!AUTH) return false;
+  if(AUTH.hash && AUTH.salt){return (await hashPW(pw,AUTH.salt))===AUTH.hash;}
+  if(AUTH.pw!==undefined){return pw===AUTH.pw;}
+  return false;
+}
+async function setAuthPW(id,pw){const salt=randomSalt();const hash=await hashPW(pw,salt);AUTH={id:id,salt:salt,hash:hash};save();}
+function isAuthConfigured(){return !!(AUTH && ((AUTH.hash && AUTH.salt) || AUTH.pw!==undefined));}
+function validatePW(pw){
+  if(!pw||pw.length<8) return '비밀번호는 8자 이상이어야 합니다.';
+  if(!/[A-Za-z]/.test(pw)||!/[0-9]/.test(pw)) return '영문과 숫자를 모두 포함해야 합니다.';
+  return null;
+}
+
 // ── Idle-timeout ──
+function resetIdle(){clearTimeout(_idleTimer);if(!isMaster)return;_idleTimer=setTimeout(()=>{isMaster=false;renderAdminGate();alert('⏱️ 30분간 활동이 없어 Master 세션이 만료되었습니다.');},IDLE_MS);}
+
+const save=()=>{
+  try{
+    localStorage.setItem(K.data,JSON.stringify(DB));
+    localStorage.setItem(K.img,JSON.stringify(IMGS));
+    localStorage.setItem(K.hs,JSON.stringify(HS));
+    if(AUTH) localStorage.setItem(K.auth,JSON.stringify(AUTH)); else localStorage.removeItem(K.auth);
+    localStorage.setItem(K.ui,JSON.stringify(UI));
+    scheduleFSASave();  // 파일 연결돼 있으면 자동 저장
+    return true;
+  }catch(e){
+    if(e && (e.name==='QuotaExceededError' || /quota/i.test(String(e.message)))){
+      alert('⚠️ 저장 공간이 가득 찼습니다.\n이미지 크기를 줄이거나 오래된 데이터를 정리해 주세요.');
+    } else {
+      alert('❌ 저장 실패: '+(e&&e.message||e));
+    }
+    return false;
+  }
+};
+
+// ──────────────────────────────────────────
+// 공용 다운로드 헬퍼 — URL.revokeObjectURL 레이스 컨디션 + DOM 미연결 이슈 해결
+// ──────────────────────────────────────────
+function triggerDownload(blob, filename){
+  try{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=filename;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    // 다운로드가 실제로 시작될 시간을 보장 후 정리 (레이스 방지)
+    setTimeout(function(){ try{a.remove();}catch(_){} URL.revokeObjectURL(url); }, 1200);
+    return true;
+  }catch(e){
+    alert('다운로드 실패: '+(e&&e.message||e));
+    return false;
+  }
+}
+
 // ──────────────────────────────────────────
 // FILE SYSTEM ACCESS API — 이 HTML 파일에 자체 저장
 // Chrome/Edge 한정. file:// 에서는 FSA 대신 수동 다운로드 폴백
@@ -454,12 +688,95 @@ function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;',
 let _fsaHandle=null, _fsaTimer=null;
 const FSA_IDB='kc_fsa_db', FSA_STORE='handle', FSA_KEY='current';
 
+function fsaSupported(){return 'showOpenFilePicker' in window && 'showSaveFilePicker' in window;}
+function fsaIdbOpen(){
+  return new Promise((res,rej)=>{
+    const rq=indexedDB.open(FSA_IDB,1);
+    rq.onupgradeneeded=()=>rq.result.createObjectStore(FSA_STORE);
+    rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error);
+  });
+}
 async function fsaIdbPut(v){const db=await fsaIdbOpen();return new Promise((res,rej)=>{const tx=db.transaction(FSA_STORE,'readwrite');tx.objectStore(FSA_STORE).put(v,FSA_KEY);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
 async function fsaIdbGet(){const db=await fsaIdbOpen();return new Promise((res,rej)=>{const tx=db.transaction(FSA_STORE,'readonly');const rq=tx.objectStore(FSA_STORE).get(FSA_KEY);rq.onsuccess=()=>res(rq.result);rq.onerror=()=>rej(rq.error);});}
 async function fsaIdbDel(){const db=await fsaIdbOpen();return new Promise((res,rej)=>{const tx=db.transaction(FSA_STORE,'readwrite');tx.objectStore(FSA_STORE).delete(FSA_KEY);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
 
+function fsaSetStatus(msg){const el=document.getElementById('fsa-state');if(el)el.textContent=msg;}
+
+async function fsaEnsurePermission(handle){
+  if(!handle || !handle.queryPermission)return false;
+  const opts={mode:'readwrite'};
+  if((await handle.queryPermission(opts))==='granted')return true;
+  if((await handle.requestPermission(opts))==='granted')return true;
+  return false;
+}
+
 // 현재 DOM + 데이터 시드를 내장한 HTML 소스를 반환 (FSA · 수동 다운로드 공통 사용)
+function buildSelfSavedHtml(){
+  const snapshot={DB:JSON.stringify(DB),IMGS:JSON.stringify(IMGS),HS:JSON.stringify(HS),UI:JSON.stringify(UI),LAYOUT:JSON.stringify(LAYOUT)};
+  const seedInject='<scr'+'ipt id="__SEED__">(function(){var snap='+JSON.stringify(snapshot)+';var K2={data:"eq_v6_data",img:"eq_v6_img",hs:"eq_v6_hs",ui:"eq_v6_ui",auth:"eq_v6_auth",layout:"eq_v6_layout"};try{if(!localStorage.getItem(K2.data)){localStorage.setItem(K2.data,snap.DB);localStorage.setItem(K2.img,snap.IMGS);localStorage.setItem(K2.hs,snap.HS);localStorage.setItem(K2.ui,snap.UI);localStorage.setItem(K2.layout,snap.LAYOUT);}}catch(e){}})();<'+'/script>';
+  const doc=document.documentElement.cloneNode(true);
+  doc.querySelectorAll('#__SEED__').forEach(el=>el.remove());
+  doc.querySelectorAll('#__kc_guard_ov__').forEach(el=>el.remove()); // 런타임 오버레이 제거
+  let src='<!DOCTYPE html>\n'+doc.outerHTML;
+  if(src.indexOf('</head>')>-1){src=src.replace('</head>', seedInject+'</head>');}
+  else{src=seedInject+src;}
+  return src;
+}
+
 // file:// 환경 폴백 — 수동 다운로드로 "자체 저장" 흉내
+function saveSelfFallback(){
+  const src=buildSelfSavedHtml();
+  const blob=new Blob([src],{type:'text/html;charset=utf-8'});
+  const ok=triggerDownload(blob, 'index_v9.html');
+  if(ok){
+    fsaSetStatus('수동 모드 (file://) — 다운로드 후 덮어쓰기');
+    alert('💾 다운로드 완료 (수동 모드)\n\n⚠️ file:// 환경에서는 자동 저장이 불가능합니다.\n다운로드된 HTML 파일을 원본 파일 위치에 덮어쓰기 저장하세요.\n\n자동 저장을 사용하려면 로컬 서버(예: python -m http.server 8000)로 열어주세요.');
+  }
+}
+
+async function linkSelfFile(){
+  if(!fsaSupported() || location.protocol==='file:'){
+    // 폴백: file:// 이거나 FSA 미지원 브라우저 → 수동 다운로드
+    if(!confirm('⚠️ 현재 환경(file:// 또는 FSA 미지원 브라우저)에서는 자동 저장을 쓸 수 없습니다.\n\n[확인] = 지금 상태를 HTML로 다운로드하여 수동 덮어쓰기\n[취소] = 중단\n\n※ 로컬 서버(localhost)로 열면 자동 저장 사용 가능'))return;
+    saveSelfFallback();
+    return;
+  }
+  try{
+    const [h]=await window.showOpenFilePicker({types:[{description:'HTML',accept:{'text/html':['.html','.htm']}}],excludeAcceptAllOption:false,multiple:false});
+    if(!h)return;
+    if(!(await fsaEnsurePermission(h))){alert('쓰기 권한이 거부되어 연결하지 못했습니다.');return;}
+    _fsaHandle=h; await fsaIdbPut(h);
+    fsaSetStatus('연결됨: '+h.name+' (자동 저장 활성)');
+    alert('✅ 파일 연결 완료!\n이제 데이터 변경 시 자동으로 "'+h.name+'" 에 저장됩니다.');
+    // 첫 1회는 즉시 저장으로 데이터 동기화
+    saveToSelfNow();
+  }catch(e){if(e&&e.name!=='AbortError')alert('연결 실패: '+(e&&e.message||e));}
+}
+
+async function unlinkSelfFile(){
+  if(!confirm('자체 저장 연결을 해제할까요? (데이터는 그대로 유지됩니다)'))return;
+  _fsaHandle=null; await fsaIdbDel();
+  fsaSetStatus('미연결');
+  alert('연결이 해제되었습니다.');
+}
+
+function scheduleFSASave(){
+  if(!_fsaHandle)return;
+  clearTimeout(_fsaTimer);
+  _fsaTimer=setTimeout(()=>{saveToSelfFile().catch(e=>console.warn('FSA save failed',e));}, 1500);
+}
+
+async function saveToSelfNow(){
+  // file:// 또는 FSA 미지원 → 수동 다운로드 폴백
+  if(!fsaSupported() || location.protocol==='file:'){
+    saveSelfFallback();
+    return;
+  }
+  if(!_fsaHandle){alert('먼저 "🔗 이 파일과 연결" 을 눌러 저장 대상 파일을 지정하세요.');return;}
+  try{await saveToSelfFile(); alert('💾 이 파일에 저장 완료!');}
+  catch(e){alert('저장 실패: '+(e&&e.message||e));}
+}
+
 async function saveToSelfFile(){
   if(!_fsaHandle)return;
   if(!(await fsaEnsurePermission(_fsaHandle))){fsaSetStatus('권한 없음 (재연결 필요)');throw new Error('쓰기 권한 거부');}
@@ -471,6 +788,18 @@ async function saveToSelfFile(){
 }
 
 // 부팅 시 저장된 핸들 복원 시도 + UI 갱신
+(async function initFSA(){
+  if(!fsaSupported())return;
+  try{
+    const h=await fsaIdbGet();
+    if(h){
+      _fsaHandle=h;
+      const perm=await h.queryPermission({mode:'readwrite'});
+      fsaSetStatus(perm==='granted'?'연결됨: '+h.name+' (자동 저장 활성)':'연결됨: '+h.name+' (권한 재승인 필요)');
+    }
+  }catch(e){console.warn('FSA init',e);}
+})();
+
 function applyUI(){
   document.getElementById('hdr-title').textContent=UI.title;
   document.getElementById('hdr-sub').textContent=UI.sub;
@@ -545,12 +874,64 @@ async function fetchFromGitHub(opts){
 }
 
 // ── data.json 내보내기 (GitHub 업로드용) ──
+function exportDataJson(){
+  try{
+    const currentV=+(localStorage.getItem(GH.versionKey)||0);
+    const snap={
+      version:currentV+1,
+      updatedAt:new Date().toISOString(),
+      DB:DB,
+      IMGS:IMGS,
+      HS:HS,
+      UI:UI
+    };
+    if(typeof LAYOUT!=='undefined')snap.LAYOUT=LAYOUT;
+    const text=JSON.stringify(snap,null,2);
+    const blob=new Blob([text],{type:'application/json;charset=utf-8'});
+    const ok=triggerDownload(blob,'data.json');
+    if(ok){
+      alert('📤 data.json 다운로드 완료\n\n다음 단계:\n1. GitHub 저장소(kct-parts/searching)에 업로드\n2. 기존 data.json이 있으면 덮어쓰기 (Commit changes)\n3. 1~2분 뒤 앱 새로고침하면 자동 동기화됨\n\n버전: v'+snap.version+'\n품목: '+DB.length+'건\n크기: '+(Math.round(blob.size/1024))+' KB');
+    }
+  }catch(e){
+    alert('❌ data.json 생성 실패: '+(e.message||e));
+  }
+}
+
 function switchTab(t){
-  ['search','unit'].forEach(id=>{
+  ['search','unit','admin'].forEach(id=>{
     document.getElementById('screen-'+id).classList.toggle('active',id===t);
     document.getElementById('nav-'+id).classList.toggle('active',id===t);
   });
+  if(t==='admin'){renderAdminGate();renderDList();refreshEqSel();}
   if(t==='unit')renderUnit();
+}
+
+function renderAdminGate(){
+  document.getElementById('admin-locked').style.display=isMaster?'none':'block';
+  document.getElementById('admin-content').style.display=isMaster?'block':'none';
+  document.getElementById('master-badge').style.display=isMaster?'inline':'none';
+  document.getElementById('btn-logout').style.display=isMaster?'inline':'none';
+  if(isMaster){
+    const se=document.getElementById('show-id');
+    if(se){se.textContent='';const t=document.createElement('span');t.style.fontFamily='monospace';t.style.color='var(--accent)';t.textContent=AUTH&&AUTH.id||'-';se.append('현재: ',t);}
+    // GitHub 상태 정보 갱신
+    const ghInfo=document.getElementById('gh-info-state');
+    if(ghInfo){
+      const lv=+(localStorage.getItem(GH.versionKey)||0);
+      const syncedAt=localStorage.getItem(GH.syncedAtKey);
+      const badge=document.getElementById('sync-badge');
+      const st=badge?badge.getAttribute('data-state'):'idle';
+      const stLabel={idle:'대기',syncing:'동기화 중',ok:'동기화됨',local:'로컬 전용',err:'오프라인'}[st]||'-';
+      let when='-';
+      if(syncedAt){
+        try{const d=new Date(syncedAt);when=d.toLocaleString('ko-KR');}catch(_){when=syncedAt;}
+      }
+      ghInfo.textContent=stLabel+' · 버전 v'+lv+' · 최종 '+when+' · 품목 '+DB.length+'건';
+    }
+  }
+  // Toggle login button label for first-run setup
+  const lb=document.getElementById('admin-login-btn');
+  if(lb) lb.textContent = isAuthConfigured()?'🔑 Master 로그인':'🛠️ Master 초기 설정';
 }
 
 function checkEmptyMsg(){
@@ -558,6 +939,13 @@ function checkEmptyMsg(){
   if(e)e.style.display=DB.length?'none':'block';
 }
 
+function openLoginModal(){
+  if(!isAuthConfigured()){openSetupModal();return;}
+  document.getElementById('li-id').value='';document.getElementById('li-pw').value='';
+  document.getElementById('login-err').style.display='none';
+  document.getElementById('login-modal').classList.add('active');
+  setTimeout(()=>document.getElementById('li-id').focus(),300);
+}
 function openSetupModal(){
   const m=document.getElementById('cred-modal');
   credMode='setup';
@@ -573,16 +961,116 @@ function openSetupModal(){
 }
 
 document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('li-pw').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+  document.getElementById('hs-imgwrap').addEventListener('click',function(e){
+    if(e.target.classList.contains('imgmap-dot'))return;
+    const r=this.getBoundingClientRect();
+    const x=+((e.clientX-r.left)/r.width*100).toFixed(1);
+    const y=+((e.clientY-r.top)/r.height*100).toFixed(1);
+    tempHS.push({x,y,partName:'',model:'',maker:'',specs:'',unit:'',parttype:'',division:'',itemcode:''});
+    addDot(this,x,y,tempHS.length-1);renderHSList();
+  });
   // ── 초기 상태 뱃지 세팅 + GitHub 자동 fetch ──
   const lv=+(localStorage.getItem(GH.versionKey)||0);
+  const syncedAt=localStorage.getItem(GH.syncedAtKey);
   if(lv>0)setSyncBadge('local','로컬 v'+lv);
   else setSyncBadge('idle','대기');
+  // file:// 환경에서는 CORS로 막히므로 스킵
   if(location.protocol==='file:'){
     setSyncBadge('local','file:// 로컬');
     return;
   }
+  // 백그라운드에서 조용히 동기화 시도
   setTimeout(function(){fetchFromGitHub({silent:true});},300);
 });
+
+async function doLogin(){
+  const errEl=document.getElementById('login-err');
+  const now=Date.now();
+  if(_lockUntil && now<_lockUntil){
+    const sec=Math.ceil((_lockUntil-now)/1000);
+    errEl.textContent='로그인 잠김. '+sec+'초 후 다시 시도하세요.';errEl.style.display='block';return;
+  }
+  const id=document.getElementById('li-id').value.trim(),pw=document.getElementById('li-pw').value;
+  const ok = AUTH && id===AUTH.id && await verifyAuthPW(pw);
+  if(ok){
+    _loginFail=0;_lockUntil=0;sessionStorage.removeItem('eq_login_fail');sessionStorage.removeItem('eq_lock_until');
+    // Lazy migrate legacy plaintext → hashed
+    if(AUTH && AUTH.pw!==undefined && !AUTH.hash){ await setAuthPW(AUTH.id,pw); }
+    isMaster=true;document.getElementById('login-modal').classList.remove('active');
+    renderAdminGate();renderDList();refreshEqSel();resetIdle();
+  } else {
+    _loginFail++;sessionStorage.setItem('eq_login_fail',String(_loginFail));
+    if(_loginFail>=MAX_LOGIN_FAIL){_lockUntil=Date.now()+LOCK_MS;sessionStorage.setItem('eq_lock_until',String(_lockUntil));_loginFail=0;sessionStorage.setItem('eq_login_fail','0');
+      errEl.textContent='연속 실패 '+MAX_LOGIN_FAIL+'회. 60초간 잠금됩니다.';
+    } else {
+      errEl.textContent='아이디 또는 비밀번호가 틀렸습니다. ('+_loginFail+'/'+MAX_LOGIN_FAIL+')';
+    }
+    errEl.style.display='block';document.getElementById('li-pw').value='';
+  }
+}
+function logout(){if(!confirm('Master 로그아웃 하시겠습니까?'))return;isMaster=false;clearTimeout(_idleTimer);renderAdminGate();}
+
+function openChangeCred(mode){
+  credMode=mode;document.getElementById('cred-err').style.display='none';
+  if(mode==='id'){
+    document.getElementById('cred-title').textContent='아이디 변경';
+    document.getElementById('cred-sub').textContent='새 아이디 (4자 이상)';
+    document.getElementById('cred-fields').innerHTML='<div class="login-field"><label>현재 비밀번호</label><input class="login-input" id="cc-pw" type="password"/></div><div class="login-field"><label>새 아이디</label><input class="login-input" id="cc-new" type="text" autocomplete="off"/></div>';
+  } else {
+    document.getElementById('cred-title').textContent='비밀번호 변경';
+    document.getElementById('cred-sub').textContent='현재 비밀번호 확인 후 변경 (PW 8자+, 영문·숫자 포함)';
+    document.getElementById('cred-fields').innerHTML='<div class="login-field"><label>현재 비밀번호</label><input class="login-input" id="cc-pw" type="password"/></div><div class="login-field"><label>새 비밀번호</label><input class="login-input" id="cc-new" type="password"/></div><div class="login-field"><label>새 비밀번호 확인</label><input class="login-input" id="cc-new2" type="password"/></div>';
+  }
+  document.getElementById('cred-modal').classList.add('active');
+}
+async function doChangeCred(){
+  const errEl=document.getElementById('cred-err');
+  // Setup path (no AUTH yet)
+  if(credMode==='setup'){
+    const id=(document.getElementById('cc-id')||{value:''}).value.trim();
+    const nw=document.getElementById('cc-new').value,nw2=document.getElementById('cc-new2').value;
+    if(id.length<4){errEl.textContent='아이디는 4자 이상이어야 합니다.';errEl.style.display='block';return;}
+    const v=validatePW(nw);if(v){errEl.textContent=v;errEl.style.display='block';return;}
+    if(nw!==nw2){errEl.textContent='비밀번호가 일치하지 않습니다.';errEl.style.display='block';return;}
+    await setAuthPW(id,nw);
+    isMaster=true;document.getElementById('cred-modal').classList.remove('active');
+    renderAdminGate();renderDList();refreshEqSel();resetIdle();
+    alert('✅ 초기 설정 완료! 다음부터는 이 계정으로 로그인하세요.');return;
+  }
+  const pw=document.getElementById('cc-pw').value,nw=document.getElementById('cc-new').value;
+  const ok=await verifyAuthPW(pw);
+  if(!ok){errEl.textContent='현재 비밀번호가 틀렸습니다.';errEl.style.display='block';return;}
+  if(credMode==='pw'){
+    const nw2=document.getElementById('cc-new2').value;
+    const v=validatePW(nw);if(v){errEl.textContent=v;errEl.style.display='block';return;}
+    if(nw!==nw2){errEl.textContent='비밀번호가 일치하지 않습니다.';errEl.style.display='block';return;}
+    await setAuthPW(AUTH.id,nw);
+  } else {
+    const nwid=nw.trim();
+    if(nwid.length<4){errEl.textContent='아이디는 4자 이상이어야 합니다.';errEl.style.display='block';return;}
+    AUTH.id=nwid;save();
+  }
+  document.getElementById('cred-modal').classList.remove('active');
+  renderAdminGate();
+  alert('변경 완료!');
+}
+
+function openEdit(target){
+  editTarget=target;
+  document.getElementById('edit-title').textContent={title:'앱 이름 수정',sub:'서브 타이틀 수정'}[target];
+  document.getElementById('edit-val').value=UI[target];
+  const pv=document.getElementById('edit-preview');
+  if(target==='title'){pv.style.display='block';pv.textContent=UI[target];document.getElementById('edit-val').oninput=function(){pv.textContent=this.value||'미리보기';};}
+  else{pv.style.display='none';document.getElementById('edit-val').oninput=null;}
+  document.getElementById('edit-modal').classList.add('active');
+}
+function doEditSave(){
+  const v=document.getElementById('edit-val').value.trim();if(!v){alert('값을 입력하세요.');return;}
+  const prev=UI[editTarget];UI[editTarget]=v;
+  if(!save()){UI[editTarget]=prev;applyUI();return;}
+  applyUI();document.getElementById('edit-modal').classList.remove('active');alert('저장 완료!');
+}
 
 // ── FILTER CASCADE HELPERS ──
 const FILTER_MAP = {fc:'customer',fg:'group',fn:'equip',fu:'unit',fdv:'division',fic:'itemcode',fpt:'parttype',fm:'model',fmk:'maker'};
@@ -644,7 +1132,8 @@ function attachFilterHandlers(){
     ft.dataset.bound = '1';
   }
 }
-// (idle rearm removed — public build has no admin session)
+// Idle activity rearm
+['click','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{if(isMaster)resetIdle();},{passive:true}));
 
 function doSearch(){
   const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
@@ -682,6 +1171,20 @@ function showDetail(d){
   rows.forEach(r=>{const tr=document.createElement('tr');const t1=document.createElement('td');const t2=document.createElement('td');t1.textContent=r[0];t2.textContent=r[1];if(r[0]==='사양')t2.style.whiteSpace='pre-wrap';tr.append(t1,t2);tbl.appendChild(tr);});
   document.getElementById('dmodal').classList.add('active');
 }
+function closeDModal(){document.getElementById('dmodal').classList.remove('active');}
+
+function renderUnit(){
+  const groups=[...new Set(DB.map(d=>d.group).filter(Boolean))];
+  const gC=document.getElementById('unit-group-chips');
+  if(!groups.length){gC.innerHTML='<div style="font-size:13px;color:var(--text2)">데이터 없음</div>';document.getElementById('uiw').innerHTML='';document.getElementById('upl').innerHTML='';return;}
+  if(!curGroup||!groups.includes(curGroup))curGroup=groups[0];
+  gC.innerHTML=groups.map((g,i)=>'<div class="group-chip'+(g===curGroup?' active':'')+'" onclick="selGroupIdx('+i+')">'+esc(g)+'</div>').join('');
+  gC._groups=groups;
+  const equips=[...new Set(DB.filter(d=>d.group===curGroup).map(d=>d.equip).filter(Boolean))];
+  if(!equips.length){document.getElementById('uiw').innerHTML='';document.getElementById('upl').innerHTML='';return;}
+  if(!curEquip||!equips.includes(curEquip))curEquip=equips[0];
+  renderUnitImg();renderUnitParts();
+}
 function selGroup(g){curGroup=g;curEquip=null;renderUnit();}
 function selGroupIdx(i){const g=document.getElementById('unit-group-chips')._groups;if(g&&g[i]!==undefined){selGroup(g[i]);}}
 function selEquip(e){curEquip=e;document.querySelectorAll('.equip-chip').forEach(el=>el.classList.toggle('active',el.textContent===e));renderUnitImg();renderUnitParts();}
@@ -710,6 +1213,131 @@ function showLastPart(i){const s=_lastParts[i];if(s&&s.d)showDetail(s.d);}
 function showHSDetail(i){const s=(HS[curEquip]||[])[i];if(!s)return;showDetail({customer:s.customer||'',group:s.group||'',equip:curEquip,unit:s.unit||'',division:s.division||'',itemcode:s.itemcode||'',parttype:s.parttype||'',part:s.partName||'',model:s.model||'',maker:s.maker||'',specs:s.specs||''});}
 
 // ── XLSX UPLOAD (SheetJS) ──
+function handleXLSX(inp){
+  const f=inp.files[0];if(!f)return;
+  // ── 사전 점검: XLSX 라이브러리 로드 확인 ──
+  if(typeof XLSX==='undefined'){
+    alert('❌ 엑셀 라이브러리(SheetJS)가 로드되지 않았습니다.\n\n원인: 인터넷 차단 · CDN 접근 실패 · SRI 해시 불일치\n\n해결: 인터넷 연결 확인 후 페이지를 새로고침하세요.');
+    setStatus('xlsx-st','err','❌ XLSX 라이브러리 미로드 — 새로고침 필요');
+    inp.value='';return;
+  }
+  // 즉시 피드백 (사용자가 "아무 반응 없음"으로 오해하지 않도록)
+  setStatus('xlsx-st','ok','⏳ 파일 읽는 중...');
+  let mode='append';
+  if(DB.length>0){
+    // 기존 prompt() → confirm() 로 교체 (OK/Cancel 이 명확, 실수 방지).
+    // 교체가 필요하면 "🗑️ 전체 데이터 초기화" 버튼 사용 후 업로드.
+    if(!confirm('기존 데이터 '+DB.length+'건이 있습니다.\n\n[확인] = 기존에 추가\n[취소] = 업로드 중단\n\n※ 전체 교체는 "🗑️ 전체 데이터 초기화" 후 다시 업로드하세요.')){
+      setStatus('xlsx-st','err','업로드 취소됨');
+      inp.value='';return;
+    }
+  }
+  const rd=new FileReader();
+  rd.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){setStatus('xlsx-st','err','데이터가 없습니다.');return;}
+
+      // Map Korean/English header variants
+      function pick(row,names){for(const n of names){if(row[n]!==undefined&&String(row[n]).trim())return String(row[n]).trim();}return '';}
+
+      if(mode==='replace'){DB=[];IMGS={};HS={};}
+      const existingCodes=new Set(DB.map(d=>d.itemcode).filter(Boolean));
+      let cnt=0,dupSkipped=0;
+      rows.forEach(row=>{
+        const item={
+          customer:pick(row,['Module','module','고객사','customer','Customer']),
+          group:pick(row,['장비군','group','Group','장비 군']),
+          equip:pick(row,['장비명','equip','Equipment','장비 명']),
+          unit:pick(row,['Unit','unit','유닛','UNIT']),
+          division:pick(row,['구분','division','Division','Category','category','카테고리']),
+          itemcode:pick(row,['품목코드','itemcode','ItemCode','Item Code','품목 코드','코드','Code']),
+          parttype:pick(row,['부품종류','parttype','PartType','부품 종류','종류']),
+          part:pick(row,['부품명','part','Part','부품 명']),
+          model:pick(row,['모델명','model','Model','모델 명']),
+          maker:pick(row,['제조사','maker','Maker','Manufacturer']),
+          specs:pick(row,['사양','specs','Spec','Specs','Specification'])
+        };
+        if(!(item.part||item.model))return;
+        if(mode==='append' && item.itemcode && existingCodes.has(item.itemcode)){dupSkipped++;return;}
+        DB.push(item);if(item.itemcode)existingCodes.add(item.itemcode);cnt++;
+      });
+      if(!save()){setStatus('xlsx-st','err','❌ 저장 실패(공간 부족 가능). 일부 반영만 된 상태.');return;}
+      refreshFilters();renderDList();refreshEqSel();checkEmptyMsg();
+      const msg=(mode==='replace'?'🔄 교체':'➕ 추가')+' '+cnt+'건'+(dupSkipped?' (중복 '+dupSkipped+'건 건너뜀)':'')+' · 총 '+DB.length+'건';
+      setStatus('xlsx-st','ok','✅ '+msg);
+    }catch(err){setStatus('xlsx-st','err','❌ 오류: '+err.message);}
+    inp.value='';
+  };
+  rd.readAsArrayBuffer(f);
+}
+
+function dlTemplate(){
+  // Create XLSX template using SheetJS
+  const ws_data=[
+    ['Module','장비군','장비명','Unit','구분','품목코드','부품종류','부품명','모델명','제조사','사양'],
+    ['삼성전자','CNC 가공기','CNC-3000','스핀들 유닛','기구','KC-MEC-001','베어링','스핀들 베어링','6305-2RS','NSK','내경:25mm, 외경:62mm'],
+    ['LG전자','프레스','HP-500T','유압 유닛','배관','KC-PIP-012','실린더','유압 실린더','HC-250-200','Parker','내경:250mm, 행정:200mm'],
+    ['SK하이닉스','노광기','NX-900','전원 유닛','전장','KC-ELE-034','컨트롤러','PLC 모듈','CPU1215C','Siemens','DC24V, 이더넷 내장']
+  ];
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols']=[{wch:12},{wch:14},{wch:12},{wch:14},{wch:8},{wch:14},{wch:10},{wch:16},{wch:14},{wch:10},{wch:24}];
+  XLSX.utils.book_append_sheet(wb,ws,'부품데이터');
+  XLSX.writeFile(wb,'부품데이터_양식.xlsx');
+}
+
+function clearAll(){
+  if(!confirm('전체 삭제? (부품 DB + 장비 이미지 + 핀 데이터 모두 초기화)'))return;
+  const bDB=DB,bIMGS=IMGS,bHS=HS,bG=curGroup,bE=curEquip;
+  DB=[];IMGS={};HS={};curGroup=null;curEquip=null;
+  if(!save()){DB=bDB;IMGS=bIMGS;HS=bHS;curGroup=bG;curEquip=bE;return;}
+  refreshFilters();renderDList();refreshEqSel();checkEmptyMsg();
+  if(document.getElementById('screen-unit').classList.contains('active'))renderUnit();
+}
+function setStatus(id,cls,msg){const el=document.getElementById(id);el.className='upload-status '+cls;el.textContent=msg;}
+
+function handleImg(inp){
+  const f=inp.files[0];if(!f)return;
+  const eq=document.getElementById('img-eq-sel').value;
+  if(!eq){setStatus('img-st','err','❌ 먼저 장비명을 선택하세요.');return;}
+  const rd=new FileReader();
+  rd.onload=function(e){
+    const d=e.target.result;
+    if(d.length>2.8*1024*1024){setStatus('img-st','err','❌ 2MB 이하로 압축 후 시도하세요.');return;}
+    const prev=IMGS[eq];IMGS[eq]=d;
+    if(!save()){if(prev===undefined)delete IMGS[eq];else IMGS[eq]=prev;setStatus('img-st','err','❌ 저장 실패: 용량 초과');return;}
+    setStatus('img-st','ok','✅ "'+eq+'" 이미지 저장 완료');
+    document.getElementById('iprev').src=d;document.getElementById('iname').textContent=f.name+' ('+Math.round(f.size/1024)+'KB)';
+    document.getElementById('ipb').style.display='block';document.getElementById('btn-hs').style.display='block';
+    refreshEqSel();if(curEquip===eq)renderUnitImg();
+  };
+  rd.readAsDataURL(f);inp.value='';
+}
+function onEquipSelChange(){
+  const eq=document.getElementById('img-eq-sel').value;
+  if(!eq||!IMGS[eq]){document.getElementById('ipb').style.display='none';document.getElementById('btn-hs').style.display='none';return;}
+  document.getElementById('iprev').src=IMGS[eq];document.getElementById('iname').textContent=eq+' — 이미지 저장됨';
+  document.getElementById('ipb').style.display='block';document.getElementById('btn-hs').style.display='block';
+}
+function refreshEqSel(){
+  const equips=[...new Set(DB.map(d=>d.equip).filter(Boolean))];
+  const sel=document.getElementById('img-eq-sel');if(!sel)return;
+  const v=sel.value;sel.innerHTML='<option value="">장비 선택...</option>';
+  equips.forEach(e=>{const o=document.createElement('option');o.value=e;o.textContent=e+(IMGS[e]?' ✓':'');sel.appendChild(o);});
+  if(v)sel.value=v;
+}
+function removeImg(){
+  const eq=document.getElementById('img-eq-sel').value;
+  if(!eq||!confirm('"'+eq+'" 이미지 삭제?'))return;
+  const prev=IMGS[eq];delete IMGS[eq];
+  if(!save()){IMGS[eq]=prev;return;}
+  document.getElementById('ipb').style.display='none';document.getElementById('btn-hs').style.display='none';
+  setStatus('img-st','ok','삭제 완료');refreshEqSel();if(curEquip===eq)renderUnitImg();
+}
+
 function openHSEditor(){
   editEquip=document.getElementById('img-eq-sel').value;
   if(!editEquip||!IMGS[editEquip])return;
@@ -717,6 +1345,10 @@ function openHSEditor(){
   const w=document.getElementById('hs-imgwrap');
   w.innerHTML='';const im=document.createElement('img');im.src=IMGS[editEquip];im.alt=editEquip;w.appendChild(im);
   tempHS.forEach((s,i)=>addDot(w,s.x,s.y,i));renderHSList();document.getElementById('hsmodal').classList.add('active');
+}
+function addDot(wrap,x,y,idx){
+  const dot=document.createElement('div');dot.className='imgmap-dot';dot.id='dot'+idx;dot.textContent=idx+1;
+  dot.style.left=x+'%';dot.style.top=y+'%';makeDrag(dot,idx);wrap.appendChild(dot);
 }
 function makeDrag(dot,idx){
   let drag=false,sx,sy,sl,st;
@@ -728,8 +1360,162 @@ function makeDrag(dot,idx){
   dot.addEventListener('touchstart',function(e){e.stopPropagation();e.preventDefault();s2(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
   document.addEventListener('touchmove',function(e){mv(e.touches[0].clientX,e.touches[0].clientY);},{passive:true});document.addEventListener('touchend',en);
 }
+function addHSRow(){const w=document.getElementById('hs-imgwrap');tempHS.push({x:50,y:50,partName:'',model:'',maker:'',specs:'',unit:'',parttype:'',division:'',itemcode:''});addDot(w,50,50,tempHS.length-1);renderHSList();}
+function removeHS(i){tempHS.splice(i,1);const w=document.getElementById('hs-imgwrap');w.innerHTML='';const im=document.createElement('img');im.src=IMGS[editEquip];im.alt=editEquip;w.appendChild(im);tempHS.forEach((s,j)=>addDot(w,s.x,s.y,j));renderHSList();}
+function renderHSList(){
+  const MAX=200;
+  const fields=[['partName','부품명',MAX],['model','모델명',MAX],['division','구분',20],['itemcode','품목코드',50],['parttype','부품종류',MAX],['maker','제조사',MAX],['specs','사양',500],['unit','Unit명',MAX]];
+  document.getElementById('hs-list').innerHTML=tempHS.map((s,i)=>{
+    const inputs=fields.map(f=>'<input placeholder="'+esc(f[1])+'" maxlength="'+f[2]+'" value="'+esc(s[f[0]]||'')+'" oninput="tempHS['+i+'].'+f[0]+'=this.value.slice(0,'+f[2]+')">').join('');
+    return '<div class="hotspot-item"><div class="hotspot-item-num">'+(i+1)+'</div><div class="hi-inputs">'+inputs+'</div><button class="btn-del-hs" onclick="removeHS('+i+')">✕</button></div>';
+  }).join('');
+}
+function saveHS(){
+  const prev=HS[editEquip];HS[editEquip]=JSON.parse(JSON.stringify(tempHS));
+  if(!save()){if(prev===undefined)delete HS[editEquip];else HS[editEquip]=prev;return;}
+  document.getElementById('hsmodal').classList.remove('active');
+  if(curEquip===editEquip){renderUnitImg();renderUnitParts();}
+  alert('핀 '+tempHS.length+'개 저장!');
+}
+
+function addPart(){
+  function g(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+  const part=g('ap'),model=g('am');if(!part||!model){alert('부품명과 모델명은 필수입니다.');return;}
+  const itemcode=g('aic');
+  if(itemcode && DB.some(d=>d.itemcode===itemcode)){
+    if(!confirm('⚠️ 품목코드 "'+itemcode+'"가 이미 존재합니다.\n그래도 추가하시겠습니까?'))return;
+  }
+  DB.push({customer:g('ac'),group:g('ag'),equip:g('ae'),unit:g('au'),division:g('adv'),itemcode:itemcode,parttype:g('apt'),part:part,model:model,maker:g('amk'),specs:g('as2')});
+  if(!save()){DB.pop();alert('저장 실패: 데이터가 추가되지 않았습니다.');return;}
+  refreshFilters();renderDList();refreshEqSel();checkEmptyMsg();
+  ['ac','ag','ae','au','adv','aic','apt','ap','am','as2','amk'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});alert('추가 완료!');
+}
+function delPart(i){
+  if(!confirm('삭제?'))return;
+  const removed=DB.splice(i,1);
+  if(!save()){DB.splice(i,0,...removed);return;}
+  refreshFilters();renderDList();checkEmptyMsg();
+}
+function renderDList(){
+  document.getElementById('dcount').textContent=DB.length;
+  const el=document.getElementById('dlist');if(!el)return;
+  if(!DB.length){el.innerHTML='<div class="empty-state" style="padding:20px"><div class="icon" style="font-size:28px">📋</div><p>데이터가 없습니다</p></div>';return;}
+  el.innerHTML=DB.map((d,i)=>'<div class="data-item"><div><div class="data-item-text">'+esc(d.part||'-')+' · <span style="font-family:monospace;color:var(--accent)">'+esc(d.model||'-')+'</span>'+(d.itemcode?' <span style="font-family:monospace;color:var(--text2);font-size:11px">['+esc(d.itemcode)+']</span>':'')+'</div><div class="data-item-sub">'+esc([d.customer,d.equip,d.division,d.parttype,d.unit].filter(Boolean).join(' / '))+'</div></div><button class="btn-del" onclick="delPart('+i+')">삭제</button></div>').join('');
+}
+
 // ── 인라인 스크립트 난독화 (Base64 + eval; UTF-8 안전) ──
+function __obfuscateInlineScripts(html){
+  // 속성 없는 스크립트 블록만 대상 (src= 있는 외부 스크립트 제외).
+  // 주의: 이 함수 자신이 스크립트 안에 있으므로 종료 태그 리터럴을 직접 쓰면 파서가 종료로 인식 → 동적 구성.
+  var _OPEN = '<'+'script>';
+  var _CLOSE = '<'+'/script>';
+  var _re = new RegExp(_OPEN+'([\\s\\S]*?)'+_CLOSE, 'g');
+  return html.replace(_re, function(m, code){
+    if(!code||code.length<60) return m;
+    if(/^\s*\(function\(\)\{var snap=/.test(code)) return m; // seed 스크립트는 그대로
+    if(/atob\(|eval\(/.test(code) && code.length<400) return m;
+    try{
+      var b64 = btoa(unescape(encodeURIComponent(code)));
+      return _OPEN+'eval(decodeURIComponent(escape(atob("'+b64+'"))))'+_CLOSE;
+    }catch(e){ return m; }
+  });
+}
+
 // ── 잠금 파일 생성: 관리 모드 유지 + 3종 가드 + 난독화 ──
+function generateLockedFile(){
+  if(!confirm('🔒 잠금 파일을 생성합니다.\n\n✅ 관리 모드가 유지됩니다 (Master 로그인 필요)\n✅ 우클릭·단축키·DevTools 감지가 적용됩니다\n✅ 인라인 스크립트가 난독화됩니다\n✅ 현재 데이터·이미지·핀·레이아웃이 내장됩니다\n⚠️ Master 자격증명 해시는 포함됩니다 (원본과 동일)\n\n계속할까요?')) return;
+  const doc = document.documentElement.cloneNode(true);
+  // 가드 오버레이는 런타임 생성이므로 클론에 포함될 수 있음 → 제거
+  doc.querySelectorAll('#__kc_guard_ov__').forEach(el=>el.remove());
+  // 초기 화면을 검색 탭으로 고정
+  doc.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  const _ss = doc.getElementById('screen-search'); if(_ss)_ss.classList.add('active');
+  doc.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const _ns = doc.getElementById('nav-search'); if(_ns)_ns.classList.add('active');
+
+  const snapshot={
+    DB:JSON.stringify(DB),IMGS:JSON.stringify(IMGS),HS:JSON.stringify(HS),
+    UI:JSON.stringify(UI),LAYOUT:JSON.stringify(LAYOUT),
+    AUTH:localStorage.getItem('eq_v6_auth')||''
+  };
+  const seedInject='<scr'+'ipt>(function(){var snap='+JSON.stringify(snapshot)+';var K2={data:"eq_v6_data",img:"eq_v6_img",hs:"eq_v6_hs",ui:"eq_v6_ui",auth:"eq_v6_auth",layout:"eq_v6_layout"};try{if(!localStorage.getItem(K2.data)){localStorage.setItem(K2.data,snap.DB);localStorage.setItem(K2.img,snap.IMGS);localStorage.setItem(K2.hs,snap.HS);localStorage.setItem(K2.ui,snap.UI);localStorage.setItem(K2.layout,snap.LAYOUT);if(snap.AUTH)localStorage.setItem(K2.auth,snap.AUTH);}}catch(e){}})();<'+'/script>';
+
+  let src='<!DOCTYPE html>\n'+doc.outerHTML;
+  src=src.replace('</head>', seedInject + '</head>');
+  // 난독화 적용
+  src=__obfuscateInlineScripts(src);
+
+  const blob=new Blob([src],{type:'text/html;charset=utf-8'});
+  const now=new Date();const stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
+  if(!triggerDownload(blob, 'KCTECH_부품조회_LOCKED_'+stamp+'.html'))return;
+  alert('🔒 잠금 파일 생성 완료!\n\n원본과 같이 관리 기능을 유지하지만 소스가 난독화되어 있습니다.\n원본 대신 공유·배포용으로 사용하세요.');
+}
+
+function exportApp(mode){
+  mode=mode||'internal';
+  const isGithub = (mode==='github');
+  const msg = isGithub
+    ? 'GitHub 배포용 index.html 을 생성합니다.\n\n✅ 현재 저장된 데이터·이미지·핀·레이아웃이 포함됩니다.\n✅ 관리 모드는 완전히 제거되어 조회 전용이 됩니다.\n✅ Master 자격증명은 파일에 포함되지 않습니다.\n\n계속할까요?'
+    : '사내 배포용 HTML 파일을 생성합니다.\n\n✅ 데이터·이미지·핀·레이아웃이 포함됩니다.\n✅ 관리 모드는 완전히 제거되어 조회 전용이 됩니다.\n✅ Master 자격증명은 파일에 포함되지 않습니다.\n\n계속할까요?';
+  if(!confirm(msg))return;
+
+  // 1) 현재 DOM 복제 후 관리 관련 요소 일괄 제거
+  const doc = document.documentElement.cloneNode(true);
+  const rm = sel => doc.querySelectorAll(sel).forEach(el=>el.remove());
+  rm('#screen-admin');
+  rm('#nav-admin');
+  rm('.btn-manage');
+  rm('.master-badge');
+  rm('.btn-logout');
+  rm('#page-editor');
+  rm('#lmodal');           // 로그인 모달
+  rm('#smodal');           // 초기 설정 모달
+  rm('#edit-modal');       // 제목/부제 편집 모달
+  rm('#cmodal');           // 자격증명 변경 모달 (존재 시)
+  rm('#hsmodal');          // 핀 편집 모달 (관리 전용)
+  rm('#amodal');           // 관리 관련 모달 (존재 시)
+  // 제목 옆 편집(✎) 버튼 제거
+  doc.querySelectorAll('[onclick*="openEdit"],[onclick*="openLayoutEditor"]').forEach(el=>el.remove());
+  // view-only 플래그
+  doc.querySelector('body')?.setAttribute('data-view-only','1');
+
+  // ── 초기 화면을 항상 '검색' 탭으로 고정 ──
+  // cloneNode는 현재 DOM 상태를 복사하므로 관리 탭에서 내보내면
+  // screen-admin 이 active 상태로 복사→삭제 후 아무 화면도 안 보이는 문제 방지
+  doc.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  const _ss = doc.getElementById('screen-search');
+  if(_ss) _ss.classList.add('active');
+  doc.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const _ns = doc.getElementById('nav-search');
+  if(_ns) _ns.classList.add('active');
+
+  // 2) 하단 네비 관리 제거 후 남은 2개가 꽉 차도록 CSS 보정 스크립트 주입
+  const snapshot={
+    DB:JSON.stringify(DB),IMGS:JSON.stringify(IMGS),HS:JSON.stringify(HS),
+    UI:JSON.stringify(UI),LAYOUT:JSON.stringify(LAYOUT)
+  };
+  const seedInject='<scr'+'ipt>(function(){var snap='+JSON.stringify(snapshot)+';var K2={data:"eq_v6_data",img:"eq_v6_img",hs:"eq_v6_hs",ui:"eq_v6_ui",auth:"eq_v6_auth",layout:"eq_v6_layout"};try{if(!localStorage.getItem(K2.data)){localStorage.setItem(K2.data,snap.DB);localStorage.setItem(K2.img,snap.IMGS);localStorage.setItem(K2.hs,snap.HS);localStorage.setItem(K2.ui,snap.UI);localStorage.setItem(K2.layout,snap.LAYOUT);}localStorage.removeItem(K2.auth);}catch(e){}})();<'+'/script>';
+  const viewOnlyCss='<style>body[data-view-only] .btn-manage,body[data-view-only] .master-badge,body[data-view-only] .btn-logout,body[data-view-only] [onclick*="openEdit"],body[data-view-only] [onclick*="openLayoutEditor"]{display:none!important}body[data-view-only] .bottom-nav .nav-item{flex:1}</style>';
+  // view-only 가드: 관리 관련 함수 no-op 처리 (외부에서 호출 시도 차단)
+  const viewOnlyGuard='<scr'+'ipt>(function(){var stubs=["handleXLSX","handleImg","removeImg","addPart","delPart","clearAll","saveHS","addHSRow","removeHS","openHSEditor","doLogin","doChangeCred","openLoginModal","openSetupModal","openEdit","doEditSave","openLayoutEditor","closeLayoutEditor","saveLayout","resetLayout","exportApp","linkSelfFile","saveToSelfNow","unlinkSelfFile"];stubs.forEach(function(n){window[n]=function(){};});var st=window.switchTab;if(typeof st==="function"){window.switchTab=function(t){if(t==="admin")return;return st(t);};}document.addEventListener("DOMContentLoaded",function(){document.querySelectorAll("#screen-admin,#nav-admin,.btn-manage,.master-badge,.btn-logout,#page-editor,#lmodal,#smodal,#edit-modal").forEach(function(el){el.remove();});});})();<'+'/script>';
+
+  let src='<!DOCTYPE html>\n'+doc.outerHTML;
+  src=src.replace('</head>', viewOnlyCss + seedInject + viewOnlyGuard + '</head>');
+  // 배포 파일도 인라인 스크립트 난독화 적용
+  src=__obfuscateInlineScripts(src);
+
+  const blob=new Blob([src],{type:'text/html;charset=utf-8'});
+  let filename;
+  if(isGithub){
+    filename='index.html';
+  }else{
+    const now=new Date();const stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
+    filename='KCTECH_부품조회_'+stamp+'.html';
+  }
+  if(!triggerDownload(blob, filename))return;
+  alert('✅ '+(isGithub?'GitHub용 index.html':'사내 배포용 HTML')+' 다운로드 완료!\n\n파일을 열면 관리 모드 없이 조회만 가능한 상태입니다.');
+}
+
 refreshFilters();
 
 
@@ -843,6 +1629,23 @@ function applyAllLayout(){ applyLayoutToSearch(); applyLayoutToUnit(); }
 applyAllLayout();
 
 // ── EDITOR OPEN/CLOSE ──
+function openLayoutEditor(){
+  // Populate fields from current LAYOUT
+  document.getElementById('e-search-title').value = LAYOUT.searchTitle;
+  document.getElementById('e-search-sub').value = LAYOUT.searchSub;
+  document.getElementById('e-search-btn').value = LAYOUT.searchBtn;
+  document.getElementById('e-unit-title').value = LAYOUT.unitTitle;
+  document.getElementById('e-unit-sub').value = LAYOUT.unitSub;
+  document.getElementById('e-unit-group-label').value = LAYOUT.unitGroupLabel;
+  document.getElementById('e-unit-no-img').value = LAYOUT.unitNoImg;
+  document.getElementById('e-unit-no-parts').value = LAYOUT.unitNoParts;
+
+  renderFilterEditorList();
+  renderPartColEditor();
+  switchEditorTab('search');
+  document.getElementById('page-editor').classList.add('active');
+}
+
 function closeLayoutEditor(){ document.getElementById('page-editor').classList.remove('active'); }
 
 function switchEditorTab(t){
@@ -854,13 +1657,92 @@ function switchEditorTab(t){
 }
 
 // ── FILTER DRAG & DROP LIST ──
+function renderFilterEditorList(){
+  const el = document.getElementById('filter-editor-list');
+  el.innerHTML = '';
+  LAYOUT.filters.forEach((f, i) => {
+    const row = document.createElement('div');
+    row.className = 'editor-field-row';
+    row.draggable = true;
+    row.dataset.idx = i;
+    row.innerHTML =
+      '<span class="drag-handle">⠿</span>' +
+      '<button class="field-toggle '+(f.visible?'on':'off')+'" onclick="toggleFilter('+i+')"></button>' +
+      '<input class="field-label-input" value="'+esc(f.label)+'" maxlength="30" oninput="LAYOUT.filters['+i+'].label=this.value.slice(0,30);renderFilterPreview()" placeholder="라벨명"/>' +
+      (f.key!=='keyword' ? '<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer;flex-shrink:0"><input type="checkbox" '+(f.full?'checked':'')+' onchange="LAYOUT.filters['+i+'].full=this.checked;renderFilterPreview()"> 전체폭</label>' : '<span style="font-size:10px;color:var(--accent);flex-shrink:0">전체폭</span>') +
+      '<span class="field-key">'+f.key+'</span>';
+
+    // Drag events
+    row.addEventListener('dragstart', e => { dragSrcIdx = i; row.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    row.addEventListener('dragend', () => { row.classList.remove('dragging'); document.querySelectorAll('.editor-field-row').forEach(r=>r.classList.remove('drag-over')); });
+    row.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect='move'; row.classList.add('drag-over'); });
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', e => {
+      e.preventDefault(); row.classList.remove('drag-over');
+      if(dragSrcIdx===null||dragSrcIdx===i)return;
+      const moved = LAYOUT.filters.splice(dragSrcIdx, 1)[0];
+      LAYOUT.filters.splice(i, 0, moved);
+      dragSrcIdx = null;
+      renderFilterEditorList(); renderFilterPreview();
+    });
+
+    el.appendChild(row);
+  });
+  renderFilterPreview();
+}
+
 function toggleFilter(i){
   LAYOUT.filters[i].visible = !LAYOUT.filters[i].visible;
   renderFilterEditorList();
 }
 
+function renderFilterPreview(){
+  const grid = document.getElementById('filter-preview-grid');
+  grid.innerHTML = LAYOUT.filters.filter(f=>f.visible).map(f=>
+    '<div class="preview-filter-box'+(f.full?' full':'')+'">'+
+    '<div class="preview-filter-label">'+esc(f.label)+'</div>'+
+    '<div class="preview-filter-val">전체</div></div>'
+  ).join('');
+}
+
 // ── PART COL EDITOR ──
+function renderPartColEditor(){
+  const el = document.getElementById('part-col-editor');
+  el.innerHTML = LAYOUT.partCols.map((c,i)=>
+    '<div class="editor-field-row" style="cursor:default">'+
+    '<button class="field-toggle '+(c.visible?'on':'off')+'" onclick="LAYOUT.partCols['+i+'].visible=!LAYOUT.partCols['+i+'].visible;renderPartColEditor()"></button>'+
+    '<span style="flex:1;font-size:14px">'+esc(c.label)+'</span>'+
+    '<span class="field-key">'+esc(c.key)+'</span>'+
+    '</div>'
+  ).join('');
+}
+
 // ── SAVE ──
+function saveLayout(){
+  // Collect text fields
+  LAYOUT.searchTitle = document.getElementById('e-search-title').value.trim() || LAYOUT.searchTitle;
+  LAYOUT.searchSub = document.getElementById('e-search-sub').value.trim() || LAYOUT.searchSub;
+  LAYOUT.searchBtn = document.getElementById('e-search-btn').value.trim() || LAYOUT.searchBtn;
+  LAYOUT.unitTitle = document.getElementById('e-unit-title').value.trim() || LAYOUT.unitTitle;
+  LAYOUT.unitSub = document.getElementById('e-unit-sub').value.trim() || LAYOUT.unitSub;
+  LAYOUT.unitGroupLabel = document.getElementById('e-unit-group-label').value.trim() || LAYOUT.unitGroupLabel;
+  LAYOUT.unitNoImg = document.getElementById('e-unit-no-img').value.trim() || LAYOUT.unitNoImg;
+  LAYOUT.unitNoParts = document.getElementById('e-unit-no-parts').value.trim() || LAYOUT.unitNoParts;
+
+  saveLayoutStore();
+  applyAllLayout();
+  closeLayoutEditor();
+  alert('✅ 레이아웃 저장 완료!');
+}
+
+function resetLayout(){
+  if(!confirm('기본값으로 초기화하시겠습니까?'))return;
+  LAYOUT = JSON.parse(JSON.stringify(DEFAULT_LAYOUT));
+  saveLayoutStore();
+  openLayoutEditor();
+  applyAllLayout();
+}
+
 </script>
 </body>
 </html>
