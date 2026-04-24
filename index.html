@@ -8,7 +8,7 @@
 <!-- ↓ 여기에 추가 -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#CC1B1B">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-512.png">
   </head>
   <script id="__kc_guard__">
 /* KC TECH source-protection guard (3 layers) — mobile-safe, recoverable */
@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 
 // ── FILTER CASCADE HELPERS ──
-const FILTER_MAP = {fc:'customer',fg:'group',fn:'equip',fu:'unit',fdv:'division',fic:'itemcode',fpt:'parttype',fm:'model',fmk:'maker'};
+const FILTER_MAP = {fc:'customer',fu:'unit',fdv:'division',fic:'itemcode',fpt:'parttype',fm:'model',fmk:'maker'};
 function sortKo(arr){return arr.slice().sort((a,b)=>String(a).localeCompare(String(b),'ko'));}
 function getActiveFilters(){
   const act={};
@@ -590,7 +590,7 @@ function showDetail(d){
   document.getElementById('mm').textContent='모델: '+(d.model||'-');
   // specs: prefer ';' when present (safe for commas in values), fallback to ','
   const rawSpecs=(d.specs||'');const sep=rawSpecs.indexOf(';')>-1?';':',';
-  const rows=[['Module',d.customer],['장비군',d.group],['장비명',d.equip],['Unit',d.unit],['구분',d.division],['품목코드',d.itemcode],['부품종류',d.parttype],['제조사',d.maker],['사양',rawSpecs],
+  const rows=[['Module',d.customer],['Unit',d.unit],['구분',d.division],['품목코드',d.itemcode],['부품종류',d.parttype],['제조사',d.maker],['사양',rawSpecs],
     ...rawSpecs.split(sep).map(s=>{const p=s.indexOf(':');return p>-1?[s.slice(0,p).trim(),s.slice(p+1).trim()]:[s.trim(),null];})
   ].filter(r=>r[1]&&String(r[1]).trim());
   const tbl=document.getElementById('ms');tbl.innerHTML='';
@@ -665,8 +665,6 @@ const DEFAULT_LAYOUT = {
   searchBtn: '🔍 검색',
   filters: [
     {key:'customer', label:'Module',     visible:true,  full:false},
-    {key:'group',    label:'장비군',     visible:true,  full:false},
-    {key:'equip',    label:'장비명',     visible:true,  full:false},
     {key:'unit',     label:'UNIT',       visible:true,  full:false},
     {key:'division', label:'구분',       visible:true,  full:false},
     {key:'itemcode', label:'품목코드',   visible:true,  full:false},
@@ -677,7 +675,7 @@ const DEFAULT_LAYOUT = {
   ],
   unitTitle: 'Unit 시각화',
   unitSub: '장비 도면에서 부품 위치 확인',
-  unitGroupLabel: '장비군',
+ 
   unitNoImg: '관리 탭에서 이미지를 업로드하세요',
   unitNoParts: '부품이 없습니다',
   partCols: [
@@ -741,7 +739,7 @@ function applyLayoutToSearch(){
     if(f.key === 'keyword'){
       box.innerHTML = '<div class="filter-label">'+esc(f.label)+'</div><input class="filter-input" id="ft" placeholder="모델명·부품명·품목코드 검색..."/>';
     } else {
-      const idMap = {customer:'fc',group:'fg',equip:'fn',unit:'fu',division:'fdv',itemcode:'fic',parttype:'fpt',model:'fm',maker:'fmk'};
+      const idMap = {customer:'fc',unit:'fu',division:'fdv',itemcode:'fic',parttype:'fpt',model:'fm',maker:'fmk'};
       box.innerHTML = '<div class="filter-label">'+esc(f.label)+'</div><div class="sw"><select class="filter-select" id="'+idMap[f.key]+'"><option value="">전체</option></select></div>';
     }
     grid.appendChild(box);
