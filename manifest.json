@@ -1,7 +1,7 @@
 {
-  "name": "KC TECH 부품 검색 시스템",
-  "short_name": "KC TECH",
-  "description": "고객사 · 장비 · Unit으로 구매품 조회",
+  "name": "KCTECH 부품 검색 시스템",
+  "short_name": "KCTECH",
+  "description": "제작자 : CMP제조기술팀 강해원",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
