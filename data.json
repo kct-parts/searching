@@ -1118,7 +1118,7 @@
       "part": "REDUCER",
       "model": "AF180-005-S2-P2",
       "maker": "다우에프에이",
-      "specs": "감속비 (5:1), \r출력토크 588Nm 급"
+      "specs": "감속비 (5대1), \r출력토크 588Nm 급"
     },
     {
       "customer": "Polisher",
@@ -1157,7 +1157,7 @@
       "part": "REDUCER",
       "model": "AB042-005-S2-P2",
       "maker": "다우에프에이",
-      "specs": "감속비 5:1, \r출력토크 14Nm"
+      "specs": "감속비 5대1, \r출력토크 14Nm"
     },
     {
       "customer": "Polisher",
@@ -1170,7 +1170,7 @@
       "part": "REDUCER",
       "model": "AB042-010-S2-P2",
       "maker": "다우에프에이",
-      "specs": "감속비 (10:1), \r출력토크 14Nm"
+      "specs": "감속비 (10대1), \r출력토크 14Nm"
     },
     {
       "customer": "Polisher",
@@ -1196,7 +1196,7 @@
       "part": "REDUCER",
       "model": "VRL070C-5-K5-14BM14",
       "maker": "에스피코리아",
-      "specs": "감속비 (5:1), \r출력토크 28~79Nm"
+      "specs": "감속비 (5대1), \r출력토크 28~79Nm"
     },
     {
       "customer": "Polisher",
