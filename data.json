@@ -845,7 +845,7 @@
       "part": "Chemical_LFC",
       "model": "CLFC-300-212-252-D2-NHO",
       "maker": "티케이플로우엔지니어링㈜",
-      "specs": "유량 :250~2500ml/mm /압력:0.05~0.3Mpa /최고사양압력:0.4Mpa"
+      "specs": "유량 250~2500ml/mm /압력 0.05~0.3Mpa /최고사양압력 0.4Mpa"
     },
     {
       "customer": "Cleaner",
