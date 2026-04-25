@@ -1,6 +1,6 @@
 {
   "name": "KCTECH 부품 검색 시스템",
-  "short_name": "KCTECH",
+  "short_name": "KCTECH 구매품검색",
   "description": "제작자 : CMP제조기술팀 강해원",
   "id": "kctech-parts-search",
   "start_url": "./",
