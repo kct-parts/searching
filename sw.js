@@ -28,14 +28,19 @@ self.addEventListener('activate', event => {
 });
 
 // 요청 처리 전략:
+//   - GET 외엔 무시
 //   - 로컬 파일 → Cache First (오프라인 우선)
-//   - 외부 CDN (폰트, xlsx 등) → Network First with Cache Fallback
+//   - data.json (GitHub raw) → Network First, 쿼리스트링 무시 캐싱
+//   - 기타 외부 CDN (폰트 등) → Network First with Cache Fallback
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+
   const url = new URL(event.request.url);
   const isLocal = url.origin === self.location.origin;
+  const isDataJson = url.hostname === 'raw.githubusercontent.com';
 
   if (isLocal) {
-    // Cache First
+    // Cache First (정적 셸)
     event.respondWith(
       caches.match(event.request).then(cached => {
         if (cached) return cached;
@@ -45,11 +50,31 @@ self.addEventListener('fetch', event => {
             caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
           }
           return res;
-        }).catch(() => caches.match('./index.html'));
+        }).catch(() => {
+          // 네비게이션 요청만 index.html로 폴백
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+          return new Response('', { status: 503 });
+        });
       })
     );
+  } else if (isDataJson) {
+    // data.json: Network First + 쿼리스트링 무시 캐싱
+    const cleanReq = new Request(url.origin + url.pathname);
+    event.respondWith(
+      fetch(event.request)
+        .then(res => {
+          if (res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(c => c.put(cleanReq, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(cleanReq))
+    );
   } else {
-    // Network First (CDN: 폰트, xlsx 라이브러리 등)
+    // 기타 외부 CDN (폰트 등): Network First
     event.respondWith(
       fetch(event.request)
         .then(res => {
