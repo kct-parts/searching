@@ -345,10 +345,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <script>
 
 const K={data:'eq_v6_data',img:'eq_v6_img',hs:'eq_v6_hs',auth:'eq_v6_auth',ui:'eq_v6_ui'};  
-const MAKER_URLS = {
-  '백호프오토메이션': 'https://www.beckhoff.com/ko-kr/',
-  '키엔스코리아' : 'https://www.keyence.co.kr/',  
-};
+let MAKER_URLS = JSON.parse(localStorage.getItem('eq_v6_maker_urls') || '{}');
 // ── GitHub 동기화 설정 (public repo, read-only fetch) ──
 const GH={
   owner:'kct-parts',
@@ -449,6 +446,7 @@ async function fetchFromGitHub(opts){
     IMGS=(json.IMGS&&typeof json.IMGS==='object')?json.IMGS:{};
     HS=(json.HS&&typeof json.HS==='object')?json.HS:{};
     if(json.UI&&typeof json.UI==='object')UI=Object.assign(UI,json.UI);
+    if(json.MAKER_URLS&&typeof json.MAKER_URLS==='object'){MAKER_URLS=json.MAKER_URLS;try{localStorage.setItem('eq_v6_maker_urls',JSON.stringify(MAKER_URLS));}catch(_){}}
     try{save();}catch(_){}
     localStorage.setItem(GH.versionKey,String(remoteV));
     localStorage.setItem(GH.syncedAtKey,json.updatedAt||new Date().toISOString());
