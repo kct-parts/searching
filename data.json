@@ -1,6 +1,10 @@
 {
   "version": 3,
   "updatedAt": "2026-04-27T00:00:00.000Z",
+    "MAKER_URLS": {
+    "백호프오토메이션": "https://www.beckhoff.com/ko-kr/",
+    "키엔스코리아": "https://www.keyence.co.kr/"
+  },
   "DB": [
     {
       "customer": "Cleaner",
@@ -1440,11 +1444,7 @@
         "full": true
       }
     ],
-    "MAKER_URLS": {
-    "백호프오토메이션": "https://www.beckhoff.com/ko-kr/",
-    "키엔스코리아": "https://www.keyence.co.kr/"
-  },
-    "unitTitle": "Unit 시각화",
+      "unitTitle": "Unit 시각화",
     "unitSub": "장비 도면에서 부품 위치 확인",
     "unitGroupLabel": "장비군",
     "unitNoImg": "관리 탭에서 이미지를 업로드하세요",
