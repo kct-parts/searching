@@ -1443,7 +1443,7 @@
     "MAKER_URLS": {
     "백호프오토메이션": "https://www.beckhoff.com/ko-kr/",
     "키엔스코리아": "https://www.keyence.co.kr/"
-  }
+  },
     "unitTitle": "Unit 시각화",
     "unitSub": "장비 도면에서 부품 위치 확인",
     "unitGroupLabel": "장비군",
