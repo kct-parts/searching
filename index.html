@@ -608,7 +608,7 @@ rows.forEach(r=>{
   if(r[0]==='제조사 홈페이지' && /^https?:\/\//.test(String(r[1]))){
     const a=document.createElement('a');
     a.href=r[1];
-    a.textContent='바로가기 ↗';
+    a.textContent=r[1];
     a.target='_blank';
     a.rel='noopener noreferrer';
     a.style.color='var(--accent)';
