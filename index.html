@@ -595,32 +595,43 @@ function clearSearch(){document.getElementById('search-results').style.display='
 function showDetail(d){
   document.getElementById('mt').textContent=d.part||'-';
   document.getElementById('mm').textContent='모델: '+(d.model||'-');
-  // specs: prefer ';' when present (safe for commas in values), fallback to ','
-  const rawSpecs=(d.specs||'');const sep=rawSpecs.indexOf(';')>-1?';':',';
-  const rows=[['Module',d.customer],['Unit',d.unit],['구분',d.division],['품목코드',d.itemcode],['부품종류',d.parttype],['제조사',d.maker],['사양',rawSpecs||'-'],['홈페이지',MAKER_URLS[d.maker]||'']
-].filter(r=>r[0]==='제조사 홈페이지'||( r[1]&&String(r[1]).trim()));
+  const rawSpecs=(d.specs||'');
+  const rows=[
+    ['Module',d.customer],
+    ['Unit',d.unit],
+    ['구분',d.division],
+    ['품목코드',d.itemcode],
+    ['부품종류',d.parttype],
+    ['제조사',d.maker],
+    ['사양',rawSpecs||'-'],
+    ['홈페이지',MAKER_URLS[d.maker]||'']
+  ].filter(r=>r[0]==='홈페이지'||(r[1]&&String(r[1]).trim()));
   const tbl=document.getElementById('ms');tbl.innerHTML='';
-rows.forEach(r=>{
-  const tr=document.createElement('tr');
-  const t1=document.createElement('td');
-  const t2=document.createElement('td');
-  t1.textContent=r[0];
-  if(r[0]==='홈페이지' && /^https?:\/\//.test(String(r[1]))){
-    const a=document.createElement('a');
-    a.href=r[1];
-    a.textContent=r[1];
-    a.target='_blank';
-    a.rel='noopener noreferrer';
-    a.style.color='var(--accent)';
-    a.style.textDecoration='underline';
-    t2.appendChild(a);
-  } else {
-    t2.textContent=r[1];
-  }
-  if(r[0]==='사양') t2.style.whiteSpace='pre-wrap';
-  tr.append(t1,t2);
-  tbl.appendChild(tr);
-});
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    const t1=document.createElement('td');
+    const t2=document.createElement('td');
+    t1.textContent=r[0];
+    if(r[0]==='홈페이지'){
+      if(r[1]&&/^https?:\/\//.test(r[1])){
+        const a=document.createElement('a');
+        a.href=r[1];
+        a.textContent=r[1];
+        a.target='_blank';
+        a.rel='noopener noreferrer';
+        a.style.color='var(--accent)';
+        a.style.textDecoration='underline';
+        t2.appendChild(a);
+      } else {
+        t2.textContent='-';
+      }
+    } else {
+      t2.textContent=r[1];
+    }
+    if(r[0]==='사양') t2.style.whiteSpace='pre-wrap';
+    tr.append(t1,t2);
+    tbl.appendChild(tr);
+  });
   document.getElementById('dmodal').classList.add('active');
 }
 
