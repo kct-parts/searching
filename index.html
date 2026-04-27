@@ -605,7 +605,7 @@ rows.forEach(r=>{
   const t1=document.createElement('td');
   const t2=document.createElement('td');
   t1.textContent=r[0];
-  if(r[0]==='제조사 홈페이지' && /^https?:\/\//.test(String(r[1]))){
+  if(r[0]==='홈페이지' && /^https?:\/\//.test(String(r[1]))){
     const a=document.createElement('a');
     a.href=r[1];
     a.textContent=r[1];
