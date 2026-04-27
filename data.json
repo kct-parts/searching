@@ -14,6 +14,7 @@
       "model": "EL6752",
       "maker": "백호프오토메이션",
       "specs": "1CH, 마스터 통신카드"
+      "Maker_URLS" : "https://www.beckhoff.com/ko-kr/"
     },
     {
       "customer": "Cleaner/Polisher",
