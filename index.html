@@ -598,7 +598,7 @@ function showDetail(d){
   // specs: prefer ';' when present (safe for commas in values), fallback to ','
   const rawSpecs=(d.specs||'');const sep=rawSpecs.indexOf(';')>-1?';':',';
   const rows=[['Module',d.customer],['Unit',d.unit],['구분',d.division],['품목코드',d.itemcode],['부품종류',d.parttype],['제조사',d.maker],['사양',rawSpecs||'-'],['홈페이지',MAKER_URLS[d.maker]||'']
-].filter(r=>r[0]==='홈페이지'||( r[1]&&String(r[1]).trim()));
+].filter(r=>r[0]==='제조사 홈페이지'||( r[1]&&String(r[1]).trim()));
   const tbl=document.getElementById('ms');tbl.innerHTML='';
 rows.forEach(r=>{
   const tr=document.createElement('tr');
