@@ -1462,5 +1462,9 @@
         "visible": true
       }
     ]
-  }
+  }, 
+   "MAKER_URLS": {
+    "백호프오토메이션": "https://www.beckhoff.com/ko-kr/",
+    "키엔스코리아": "https://www.keyence.co.kr/"
+  }    
 }
