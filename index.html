@@ -16,15 +16,16 @@
 <meta name="apple-mobile-web-app-title" content="KCTECH">
 <link rel="apple-touch-icon" href="icon-512.png">
   <script>
-// 소스 보호
+// 소스 보호 (스택오버플로우 참고해서 수정함)
 (function(){
   'use strict';
-  if(window._guardOn)return;window._guardOn=true;
-  var _ov=null;
+  if(window._guardOn) return;
+  window._guardOn = true;
+  var _ov = null;
   function makeOv(){
-    if(_ov)return _ov;
-    _ov=document.createElement('div');
-    _ov.id='guard-overlay';
+    if(_ov) return _ov;
+    _ov = document.createElement('div');
+    _ov.id = 'guard-overlay';
     _ov.style.cssText='position:fixed;inset:0;background:#0d1117;z-index:2147483647;display:none;align-items:center;justify-content:center;color:#e8edf4;font:14px/1.6 -apple-system,"Noto Sans KR",sans-serif;text-align:center;padding:20px;';
     _ov.innerHTML='<div><div style="font-size:42px;margin-bottom:12px">🔒</div><div style="font-size:17px;font-weight:700;margin-bottom:8px">보호된 콘텐츠</div><div style="font-size:13px;color:#7a8fa8;max-width:360px">개발자 도구가 감지되었습니다.<br>창을 닫으면 자동 복귀합니다.</div></div>';
     (document.body||document.documentElement).appendChild(_ov);
@@ -346,21 +347,26 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 const K={data:'eq_v6_data',img:'eq_v6_img',hs:'eq_v6_hs',auth:'eq_v6_auth',ui:'eq_v6_ui'};  
 let MAKER_URLS = JSON.parse(localStorage.getItem('eq_v6_maker_urls') || '{}');
-const GH={
-  owner:'kct-parts',
-  repo:'searching',
-  branch:'main',
-  path:'data.json',
-  versionKey:'eq_v6_version',
-  syncedAtKey:'eq_v6_synced_at',
-  get rawUrl(){return 'https://raw.githubusercontent.com/'+this.owner+'/'+this.repo+'/'+this.branch+'/'+this.path;}
+// GitHub 저장소 설정 - 여기 수정하면 됨
+const GH = {
+  owner: 'kct-parts',
+  repo: 'searching',
+  branch: 'main',
+  path: 'data.json',
+  versionKey: 'eq_v6_version',
+  syncedAtKey: 'eq_v6_synced_at',
+  get rawUrl(){
+    return 'https://raw.githubusercontent.com/' + this.owner + '/' + this.repo + '/' + this.branch + '/' + this.path;
+  }
 };
-let DB=JSON.parse(localStorage.getItem(K.data)||'[]');
-let IMGS=JSON.parse(localStorage.getItem(K.img)||'{}');
-let HS=JSON.parse(localStorage.getItem(K.hs)||'{}');
-let UI=JSON.parse(localStorage.getItem(K.ui)||'{"title":"부품 검색 시스템","sub":"제작자 : CMP제조기술팀 강해원"}');
-let curGroup=null,curEquip=null;
-let lastResults=[],lastParts=[];
+// 로컬 저장소에서 데이터 로드
+let DB = JSON.parse(localStorage.getItem(K.data) || '[]');
+let IMGS = JSON.parse(localStorage.getItem(K.img) || '{}');
+let HS = JSON.parse(localStorage.getItem(K.hs) || '{}');
+let UI = JSON.parse(localStorage.getItem(K.ui) || '{"title":"부품 검색 시스템","sub":"제작자 : CMP제조기술팀 강해원"}');
+
+let curGroup = null, curEquip = null;
+let lastResults = [], lastParts = [];
 
 // HTML 이스케이프
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
@@ -389,9 +395,9 @@ async function saveToSelfFile(){
 
 // 부팅 시 저장된 핸들 복원 시도 + UI 갱신
 function applyUI(){
-  document.getElementById('hdr-title').textContent=UI.title;
-  document.getElementById('hdr-sub').textContent=UI.sub;
-  document.title='KC TECH '+UI.title;
+  document.getElementById('hdr-title').textContent = UI.title;
+  document.getElementById('hdr-sub').textContent = UI.sub;
+  document.title = 'KC TECH ' + UI.title;
 }
 applyUI();
 checkEmptyMsg();
@@ -472,8 +478,10 @@ function switchTab(t){
 }
 
 function checkEmptyMsg(){
-  const e=document.getElementById('empty-msg');
-  if(e)e.style.display=DB.length?'none':'block';
+  const e = document.getElementById('empty-msg');
+  if(!e) return;
+  // 데이터 있으면 숨기고 없으면 보여줌
+  e.style.display = DB.length ? 'none' : 'block';
 }
 
 function openSetupModal(){
@@ -490,20 +498,33 @@ function openSetupModal(){
   setTimeout(()=>{const e=document.getElementById('cc-id');if(e)e.focus();},300);
 }
 
-document.addEventListener('DOMContentLoaded',function(){
+document.addEventListener('DOMContentLoaded', function(){
   // 초기화
-  const lv=+(localStorage.getItem(GH.versionKey)||0);
-  if(lv>0)setSyncBadge('local','로컬 v'+lv);
-  else setSyncBadge('idle','대기');
-  if(location.protocol==='file:'){
-    setSyncBadge('local','file:// 로컬');
+  const lv = +(localStorage.getItem(GH.versionKey) || 0);
+  if(lv > 0) setSyncBadge('local', '로컬 v' + lv);
+  else setSyncBadge('idle', '대기');
+
+  // file:// 로 열면 GitHub fetch 안 함
+  if(location.protocol === 'file:'){
+    setSyncBadge('local', 'file:// 로컬');
     return;
   }
-  setTimeout(function(){fetchFromGitHub({silent:true});},300);
+
+  // 페이지 로드 후 잠깐 있다가 동기화
+  setTimeout(function(){ fetchFromGitHub({silent:true}); }, 300);
 });
 
 // 필터 관련 함수들
-const FILTER_MAP = {fc:'customer',fu:'unit',fdv:'division',fic:'itemcode',fpt:'parttype',fm:'model',fmk:'maker'};
+// id → 데이터 키 매핑
+const FILTER_MAP = {
+  fc: 'customer',
+  fu: 'unit',
+  fdv: 'division',
+  fic: 'itemcode',
+  fpt: 'parttype',
+  fm: 'model',
+  fmk: 'maker'
+};
 function sortKo(arr){return arr.slice().sort((a,b)=>String(a).localeCompare(String(b),'ko'));}
 function getActiveFilters(){
   const act={};
@@ -513,8 +534,10 @@ function getActiveFilters(){
   });
   return act;
 }
-function getKeyword(){const ft=document.getElementById('ft');return ft?ft.value.trim().toLowerCase():'';}
-function filterDBBy(active,kw){
+function getKeyword(){
+  const ft = document.getElementById('ft');
+  return ft ? ft.value.trim().toLowerCase() : '';
+}function filterDBBy(active,kw){
   return DB.filter(d=>{
     if(!Object.keys(active).every(k=>d[k]===active[k])) return false;
     if(kw){
@@ -586,7 +609,18 @@ function doSearch(){
     '</div></div>').join('');
 }
 function showDetailIdx(i){const d=lastResults[i];if(d)showDetail(d);}
-function clearSearch(){document.getElementById('search-results').style.display='none';['fc','fg','fn','fu','fdv','fic','fpt','fm','fmk'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const ftEl=document.getElementById('ft');if(ftEl)ftEl.value='';refreshFilters();checkEmptyMsg();}
+function clearSearch(){
+  document.getElementById('search-results').style.display = 'none';
+  // 필터 전부 초기화
+  ['fc','fg','fn','fu','fdv','fic','fpt','fm','fmk'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  const ftEl = document.getElementById('ft');
+  if(ftEl) ftEl.value = '';
+  refreshFilters();
+  checkEmptyMsg();
+}
 
 function showDetail(d){
   document.getElementById('mt').textContent=d.part||'-';
@@ -684,13 +718,13 @@ function makeDrag(dot,idx){
 }
 
 
+// 초기 필터 세팅
 refreshFilters();
 
 
 
-
 // 레이아웃 설정
-
+// TODO: 나중에 관리자 페이지에서 수정 가능하게 할 것
 const K_LAYOUT = 'eq_v6_layout';
 const DEFAULT_LAYOUT = {
   searchTitle: '부품 검색',
@@ -720,7 +754,9 @@ const DEFAULT_LAYOUT = {
 
 let LAYOUT = JSON.parse(localStorage.getItem(K_LAYOUT) || 'null') || JSON.parse(JSON.stringify(DEFAULT_LAYOUT));
 
-function saveLayoutStore(){ localStorage.setItem(K_LAYOUT, JSON.stringify(LAYOUT)); }
+function saveLayoutStore(){
+  localStorage.setItem(K_LAYOUT, JSON.stringify(LAYOUT));
+}
 
 // v6 → v7 마이그레이션: 새 필터 항목 추가
 (function migrateLayoutV7(){
@@ -751,9 +787,9 @@ function saveLayoutStore(){ localStorage.setItem(K_LAYOUT, JSON.stringify(LAYOUT
   if(dirty) saveLayoutStore();
 })();
 
-// Apply layout to live search tab
+// 검색 탭에 레이아웃 적용
 function applyLayoutToSearch(){
-  // Title / sub / btn
+  // 제목, 설명, 버튼 텍스트 적용
   const st = document.querySelector('#screen-search .screen-title');
   const ss = document.querySelector('#screen-search .screen-sub');
   const sb = document.querySelector('#screen-search .btn-search');
@@ -761,7 +797,7 @@ function applyLayoutToSearch(){
   if(ss) ss.textContent = LAYOUT.searchSub;
   if(sb) sb.textContent = LAYOUT.searchBtn;
 
-  // Rebuild filter grid
+  // 필터 그리드 다시 그리기
   const grid = document.querySelector('#screen-search .filter-grid');
   if(!grid) return;
   grid.innerHTML = '';
@@ -770,7 +806,7 @@ function applyLayoutToSearch(){
     const box = document.createElement('div');
     box.className = 'filter-box' + (f.full ? ' full' : '');
     if(f.key === 'keyword'){
-      box.innerHTML = '<div class="filter-label">'+esc(f.label)+'</div><input class="filter-input" id="ft" placeholder="모델명·부품명·품목코드 검색..."/>';
+      box.innerHTML = '<div class="filter-label">'+esc(f.label)+'</div><input class="filter-input" id="ft" placeholder="모델명·부품명·제조사 등 검색..."/>';
     } else {
       const idMap = {customer:'fc',unit:'fu',division:'fdv',itemcode:'fic',parttype:'fpt',model:'fm',maker:'fmk'};
       box.innerHTML = '<div class="filter-label">'+esc(f.label)+'</div><div class="sw"><select class="filter-select" id="'+idMap[f.key]+'"><option value="">전체</option></select></div>';
@@ -781,7 +817,7 @@ function applyLayoutToSearch(){
   attachFilterHandlers();
 }
 
-// Apply layout to unit tab
+// 유닛 탭에 레이아웃 적용
 function applyLayoutToUnit(){
   const ut = document.querySelector('#screen-unit .screen-title');
   const us = document.querySelector('#screen-unit .screen-sub');
