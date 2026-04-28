@@ -15,16 +15,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="KCTECH">
 <link rel="apple-touch-icon" href="icon-512.png">
-  <script id="__kc_guard__">
-/* KC TECH source-protection guard (3 layers) — mobile-safe, recoverable */
+  <script>
+// 소스 보호
 (function(){
   'use strict';
-  if(window.__kc_guard_installed__)return;window.__kc_guard_installed__=true;
+  if(window._guardOn)return;window._guardOn=true;
   var _ov=null;
   function makeOv(){
     if(_ov)return _ov;
     _ov=document.createElement('div');
-    _ov.id='__kc_guard_ov__';
+    _ov.id='guard-overlay';
     _ov.style.cssText='position:fixed;inset:0;background:#0d1117;z-index:2147483647;display:none;align-items:center;justify-content:center;color:#e8edf4;font:14px/1.6 -apple-system,"Noto Sans KR",sans-serif;text-align:center;padding:20px;';
     _ov.innerHTML='<div><div style="font-size:42px;margin-bottom:12px">🔒</div><div style="font-size:17px;font-weight:700;margin-bottom:8px">보호된 콘텐츠</div><div style="font-size:13px;color:#7a8fa8;max-width:360px">개발자 도구가 감지되었습니다.<br>창을 닫으면 자동 복귀합니다.</div></div>';
     (document.body||document.documentElement).appendChild(_ov);
@@ -32,16 +32,16 @@
   }
   function show(){makeOv().style.display='flex';}
   function hide(){if(_ov)_ov.style.display='none';}
-  // 1) 우클릭 차단
+  // 1) 우클릭 막기
   document.addEventListener('contextmenu',function(e){e.preventDefault();},true);
-  // 2) 단축키 차단 (F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I/J/C)
+  // 2) 단축키 막기 (F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I/J/C)
   document.addEventListener('keydown',function(e){
     var k=(e.key||'').toLowerCase();
     if(e.key==='F12'){e.preventDefault();return;}
     if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&(k==='u'||k==='s')){e.preventDefault();return;}
     if((e.ctrlKey||e.metaKey)&&e.shiftKey&&(k==='i'||k==='j'||k==='c')){e.preventDefault();return;}
   },true);
-  // 3) DevTools 감지 (모바일 제외 — 오탐 방지)
+  // 3) DevTools 감지 (모바일은 패스)
   var ua=navigator.userAgent||'';
   var isMobile=/Mobi|Android|iPhone|iPad|iPod/i.test(ua)||window.innerWidth<700;
   if(!isMobile){
@@ -50,7 +50,7 @@
       try{
         var wd=window.outerWidth-window.innerWidth;
         var hd=window.outerHeight-window.innerHeight;
-        // outerWidth==0 → 새 창(about:blank 등) → 스킵
+        // 새 창이면 스킵
         if(window.outerWidth===0||window.outerHeight===0){hide();return;}
         if(wd>TH||hd>TH){show();}else{hide();}
       }catch(e){}
@@ -247,7 +247,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .btn-add-hs{background:rgba(45,189,110,0.1);border:1px solid rgba(45,189,110,0.3);color:var(--green);border-radius:8px;padding:10px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;width:100%;margin-bottom:10px;}
 .btn-save-hs{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
 
-/* ── LAYOUT EDITOR ── */
+/* 레이아웃 에디터 스타일 */
 .page-editor{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:300;display:none;flex-direction:column;}
 .page-editor.active{display:flex;}
 .editor-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
@@ -346,7 +346,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 const K={data:'eq_v6_data',img:'eq_v6_img',hs:'eq_v6_hs',auth:'eq_v6_auth',ui:'eq_v6_ui'};  
 let MAKER_URLS = JSON.parse(localStorage.getItem('eq_v6_maker_urls') || '{}');
-// ── GitHub 동기화 설정 (public repo, read-only fetch) ──
 const GH={
   owner:'kct-parts',
   repo:'searching',
@@ -361,18 +360,15 @@ let IMGS=JSON.parse(localStorage.getItem(K.img)||'{}');
 let HS=JSON.parse(localStorage.getItem(K.hs)||'{}');
 let UI=JSON.parse(localStorage.getItem(K.ui)||'{"title":"부품 검색 시스템","sub":"제작자 : CMP제조기술팀 강해원"}');
 let curGroup=null,curEquip=null;
-let _lastResults=[],_lastParts=[];
+let lastResults=[],lastParts=[];
 
-// ── XSS-safe output helpers ──
+// HTML 이스케이프
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
 
-// ── Crypto helpers (SHA-256 + 128-bit salt) ──
-// ── Idle-timeout ──
-// ──────────────────────────────────────────
-// FILE SYSTEM ACCESS API — 이 HTML 파일에 자체 저장
-// Chrome/Edge 한정. file:// 에서는 FSA 대신 수동 다운로드 폴백
-// ──────────────────────────────────────────
-let _fsaHandle=null, _fsaTimer=null;
+
+
+// FSA - 파일 직접 저장용 (Chrome/Edge only)
+let fsaHandle=null, fsaTimer=null;
 const FSA_IDB='kc_fsa_db', FSA_STORE='handle', FSA_KEY='current';
 
 async function fsaIdbPut(v){const db=await fsaIdbOpen();return new Promise((res,rej)=>{const tx=db.transaction(FSA_STORE,'readwrite');tx.objectStore(FSA_STORE).put(v,FSA_KEY);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
@@ -380,15 +376,15 @@ async function fsaIdbGet(){const db=await fsaIdbOpen();return new Promise((res,r
 async function fsaIdbDel(){const db=await fsaIdbOpen();return new Promise((res,rej)=>{const tx=db.transaction(FSA_STORE,'readwrite');tx.objectStore(FSA_STORE).delete(FSA_KEY);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
 
 // 현재 DOM + 데이터 시드를 내장한 HTML 소스를 반환 (FSA · 수동 다운로드 공통 사용)
-// file:// 환경 폴백 — 수동 다운로드로 "자체 저장" 흉내
+// file:// 환경에서는 다운로드로 대체
 async function saveToSelfFile(){
-  if(!_fsaHandle)return;
-  if(!(await fsaEnsurePermission(_fsaHandle))){fsaSetStatus('권한 없음 (재연결 필요)');throw new Error('쓰기 권한 거부');}
+  if(!fsaHandle)return;
+  if(!(await fsaEnsurePermission(fsaHandle))){fsaSetStatus('권한 없음 (재연결 필요)');throw new Error('쓰기 권한 거부');}
   const src=buildSelfSavedHtml();
-  const w=await _fsaHandle.createWritable();
+  const w=await fsaHandle.createWritable();
   await w.write(new Blob([src],{type:'text/html;charset=utf-8'}));
   await w.close();
-  fsaSetStatus('저장됨: '+new Date().toLocaleTimeString('ko-KR')+' ('+_fsaHandle.name+')');
+  fsaSetStatus('저장됨: '+new Date().toLocaleTimeString('ko-KR')+' ('+fsaHandle.name+')');
 }
 
 // 부팅 시 저장된 핸들 복원 시도 + UI 갱신
@@ -400,7 +396,7 @@ function applyUI(){
 applyUI();
 checkEmptyMsg();
 
-// ── GitHub 동기화 상태 뱃지 ──
+// 동기화 상태 뱃지
 function setSyncBadge(state,text){
   const el=document.getElementById('sync-badge');
   if(!el)return;
@@ -419,7 +415,7 @@ function setSyncBadge(state,text){
   el.setAttribute('data-state',state);
 }
 
-// ── GitHub에서 data.json 가져오기 ──
+// GitHub에서 data.json 가져오기
 async function fetchFromGitHub(opts){
   opts=opts||{};
   const silent=!!opts.silent, force=!!opts.force;
@@ -434,7 +430,7 @@ async function fetchFromGitHub(opts){
     }
     if(!res.ok)throw new Error('HTTP '+res.status);
     const json=await res.json();
-    if(!json||typeof json!=='object')throw new Error('JSON 형식 오류');
+    if(!json||typeof json!=='object')throw new Error('데이터 오류');
     const remoteV=+(json.version||0);
     const localV=+(localStorage.getItem(GH.versionKey)||0);
     if(!force && remoteV<=localV && localV>0){
@@ -466,7 +462,7 @@ async function fetchFromGitHub(opts){
   }
 }
 
-// ── data.json 내보내기 (GitHub 업로드용) ──
+// 탭 전환
 function switchTab(t){
   ['search','unit'].forEach(id=>{
     document.getElementById('screen-'+id).classList.toggle('active',id===t);
@@ -495,7 +491,7 @@ function openSetupModal(){
 }
 
 document.addEventListener('DOMContentLoaded',function(){
-  // ── 초기 상태 뱃지 세팅 + GitHub 자동 fetch ──
+  // 초기화
   const lv=+(localStorage.getItem(GH.versionKey)||0);
   if(lv>0)setSyncBadge('local','로컬 v'+lv);
   else setSyncBadge('idle','대기');
@@ -506,7 +502,7 @@ document.addEventListener('DOMContentLoaded',function(){
   setTimeout(function(){fetchFromGitHub({silent:true});},300);
 });
 
-// ── FILTER CASCADE HELPERS ──
+// 필터 관련 함수들
 const FILTER_MAP = {fc:'customer',fu:'unit',fdv:'division',fic:'itemcode',fpt:'parttype',fm:'model',fmk:'maker'};
 function sortKo(arr){return arr.slice().sort((a,b)=>String(a).localeCompare(String(b),'ko'));}
 function getActiveFilters(){
@@ -523,7 +519,7 @@ function filterDBBy(active,kw){
     if(!Object.keys(active).every(k=>d[k]===active[k])) return false;
     if(kw){
       const t=kw;
-      if(!((d.model||'').toLowerCase().includes(t)||(d.part||'').toLowerCase().includes(t)||(d.itemcode||'').toLowerCase().includes(t)||(d.customer||'').toLowerCase().includes(t)||(d.unit||'').toLowerCase().includes(t)||(d.division||'').toLowerCase().includes(t)||(d.parttype||'').toLowerCase().includes(t)||(d.maker||'').toLowerCase().includes(t))) return false;
+      if(!((d.model||'').toLowerCase().includes(t)||(d.part||'').toLowerCase().includes(t)||(d.itemcode||'').toLowerCase().includes(t))) return false;
     }
     return true;
   });
@@ -566,13 +562,13 @@ function attachFilterHandlers(){
     ft.dataset.bound = '1';
   }
 }
-// (idle rearm removed — public build has no admin session)
+
 
 function doSearch(){
   const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
   const c=gv('fc'),g=gv('fg'),n=gv('fn'),u=gv('fu'),dv=gv('fdv'),ic=gv('fic'),pt=gv('fpt'),m=gv('fm'),mk=gv('fmk'),t=(gv('ft')||'').trim().toLowerCase();
-  const r=DB.filter(d=>(!c||d.customer===c)&&(!g||d.group===g)&&(!n||d.equip===n)&&(!u||d.unit===u)&&(!dv||d.division===dv)&&(!ic||d.itemcode===ic)&&(!pt||d.parttype===pt)&&(!m||d.model===m)&&(!mk||d.maker===mk)&&(!t||(d.model||'').toLowerCase().includes(t)||(d.part||'').toLowerCase().includes(t)||(d.itemcode||'').toLowerCase().includes(t)||(d.customer||'').toLowerCase().includes(t)||(d.unit||'').toLowerCase().includes(t)||(d.division||'').toLowerCase().includes(t)||(d.parttype||'').toLowerCase().includes(t)||(d.maker||'').toLowerCase().includes(t)));
-  _lastResults=r;
+  const r=DB.filter(d=>(!c||d.customer===c)&&(!g||d.group===g)&&(!n||d.equip===n)&&(!u||d.unit===u)&&(!dv||d.division===dv)&&(!ic||d.itemcode===ic)&&(!pt||d.parttype===pt)&&(!m||d.model===m)&&(!mk||d.maker===mk)&&(!t||(d.model||'').toLowerCase().includes(t)||(d.part||'').toLowerCase().includes(t)||(d.itemcode||'').toLowerCase().includes(t)));
+  lastResults=r;
   document.getElementById('rc').textContent=r.length;
   document.getElementById('search-results').style.display='block';
   document.getElementById('empty-msg').style.display='none';
@@ -589,7 +585,7 @@ function doSearch(){
     '<span class="tag">'+esc(d.unit||'')+'</span><span class="tag">'+esc(d.equip||'')+'</span><span class="tag">'+esc(d.customer||'')+'</span>'+(d.maker?'<span class="tag">'+esc(d.maker)+'</span>':'')+
     '</div></div>').join('');
 }
-function showDetailIdx(i){const d=_lastResults[i];if(d)showDetail(d);}
+function showDetailIdx(i){const d=lastResults[i];if(d)showDetail(d);}
 function clearSearch(){document.getElementById('search-results').style.display='none';['fc','fg','fn','fu','fdv','fic','fpt','fm','fmk'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const ftEl=document.getElementById('ft');if(ftEl)ftEl.value='';refreshFilters();checkEmptyMsg();}
 
 function showDetail(d){
@@ -660,14 +656,14 @@ function renderUnitParts(){
   const spots=HS[curEquip]||[],parts=DB.filter(d=>d.equip===curEquip);
   const el=document.getElementById('upl');
   const src=spots.length?spots.map((s,i)=>({num:i+1,name:s.partName||'(이름없음)',model:s.model||'',maker:s.maker||'',hs:i})):parts.map((d,i)=>({num:i+1,name:d.part||'-',model:d.model||'',maker:d.maker||'',d:d}));
-  _lastParts=src;
+  lastParts=src;
   if(!src.length){el.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>부품이 없습니다</p></div>';return;}
   el.innerHTML=src.map((s,i)=>{const click=s.hs!==undefined?'showHSDetail('+s.hs+')':'showLastPart('+i+')';return '<div class="part-row" onclick="'+click+'"><div class="part-num">'+s.num+'</div><div class="part-info"><div class="part-name">'+esc(s.name)+'</div><div class="part-model">'+esc(s.model)+(s.maker?' · '+esc(s.maker):'')+'</div></div><div style="color:var(--text2);font-size:18px">›</div></div>';}).join('');
 }
-function showLastPart(i){const s=_lastParts[i];if(s&&s.d)showDetail(s.d);}
+function showLastPart(i){const s=lastParts[i];if(s&&s.d)showDetail(s.d);}
 function showHSDetail(i){const s=(HS[curEquip]||[])[i];if(!s)return;showDetail({customer:s.customer||'',group:s.group||'',equip:curEquip,unit:s.unit||'',division:s.division||'',itemcode:s.itemcode||'',parttype:s.parttype||'',part:s.partName||'',model:s.model||'',maker:s.maker||'',specs:s.specs||''});}
 
-// ── XLSX UPLOAD (SheetJS) ──
+// 핫스팟 에디터
 function openHSEditor(){
   editEquip=document.getElementById('img-eq-sel').value;
   if(!editEquip||!IMGS[editEquip])return;
@@ -686,15 +682,15 @@ function makeDrag(dot,idx){
   dot.addEventListener('touchstart',function(e){e.stopPropagation();e.preventDefault();s2(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
   document.addEventListener('touchmove',function(e){mv(e.touches[0].clientX,e.touches[0].clientY);},{passive:true});document.addEventListener('touchend',en);
 }
-// ── 인라인 스크립트 난독화 (Base64 + eval; UTF-8 안전) ──
-// ── 잠금 파일 생성: 관리 모드 유지 + 3종 가드 + 난독화 ──
+
+
 refreshFilters();
 
 
 
-// ──────────────────────────────────────────
-// LAYOUT CONFIG
-// ──────────────────────────────────────────
+
+// 레이아웃 설정
+
 const K_LAYOUT = 'eq_v6_layout';
 const DEFAULT_LAYOUT = {
   searchTitle: '부품 검색',
@@ -726,7 +722,7 @@ let LAYOUT = JSON.parse(localStorage.getItem(K_LAYOUT) || 'null') || JSON.parse(
 
 function saveLayoutStore(){ localStorage.setItem(K_LAYOUT, JSON.stringify(LAYOUT)); }
 
-// Migration v6 → v7: ensure new filter entries (division / itemcode / model) exist in saved LAYOUT
+// v6 → v7 마이그레이션: 새 필터 항목 추가
 (function migrateLayoutV7(){
   if(!LAYOUT || !Array.isArray(LAYOUT.filters)) return;
   let dirty = false;
@@ -749,7 +745,7 @@ function saveLayoutStore(){ localStorage.setItem(K_LAYOUT, JSON.stringify(LAYOUT
       {key:'model', label:'모델명', visible:true, full:false});
     dirty = true;
   }
-  // Relabel legacy keyword "모델명 / 키워드" → "키워드"
+  // 옛날 라벨 수정
   const kw = LAYOUT.filters.find(f=>f.key==='keyword');
   if(kw && kw.label==='모델명 / 키워드'){ kw.label='키워드'; dirty = true; }
   if(dirty) saveLayoutStore();
@@ -796,7 +792,7 @@ function applyLayoutToUnit(){
 function applyAllLayout(){ applyLayoutToSearch(); applyLayoutToUnit(); }
 applyAllLayout();
 
-// (layout editor removed — public build has no admin)
+// (레이아웃 에디터 - public 버전에는 없음)
 </script>
 <script>
 if('serviceWorker' in navigator){
