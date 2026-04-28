@@ -523,7 +523,7 @@ function filterDBBy(active,kw){
     if(!Object.keys(active).every(k=>d[k]===active[k])) return false;
     if(kw){
       const t=kw;
-      if(!((d.model||'').toLowerCase().includes(t)||(d.part||'').toLowerCase().includes(t)||(d.itemcode||'').toLowerCase().includes(t))) return false;
+      if(!((d.model||'').toLowerCase().includes(t)||(d.part||'').toLowerCase().includes(t)||(d.itemcode||'').toLowerCase().includes(t)||(d.customer||'').toLowerCase().includes(t)||(d.unit||'').toLowerCase().includes(t)||(d.division||'').toLowerCase().includes(t)||(d.parttype||'').toLowerCase().includes(t)||(d.maker||'').toLowerCase().includes(t))) return false;
     }
     return true;
   });
@@ -571,7 +571,7 @@ function attachFilterHandlers(){
 function doSearch(){
   const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
   const c=gv('fc'),g=gv('fg'),n=gv('fn'),u=gv('fu'),dv=gv('fdv'),ic=gv('fic'),pt=gv('fpt'),m=gv('fm'),mk=gv('fmk'),t=(gv('ft')||'').trim().toLowerCase();
-  const r=DB.filter(d=>(!c||d.customer===c)&&(!g||d.group===g)&&(!n||d.equip===n)&&(!u||d.unit===u)&&(!dv||d.division===dv)&&(!ic||d.itemcode===ic)&&(!pt||d.parttype===pt)&&(!m||d.model===m)&&(!mk||d.maker===mk)&&(!t||(d.model||'').toLowerCase().includes(t)||(d.part||'').toLowerCase().includes(t)||(d.itemcode||'').toLowerCase().includes(t)));
+  const r=DB.filter(d=>(!c||d.customer===c)&&(!g||d.group===g)&&(!n||d.equip===n)&&(!u||d.unit===u)&&(!dv||d.division===dv)&&(!ic||d.itemcode===ic)&&(!pt||d.parttype===pt)&&(!m||d.model===m)&&(!mk||d.maker===mk)&&(!t||(d.model||'').toLowerCase().includes(t)||(d.part||'').toLowerCase().includes(t)||(d.itemcode||'').toLowerCase().includes(t)||(d.customer||'').toLowerCase().includes(t)||(d.unit||'').toLowerCase().includes(t)||(d.division||'').toLowerCase().includes(t)||(d.parttype||'').toLowerCase().includes(t)||(d.maker||'').toLowerCase().includes(t)));
   _lastResults=r;
   document.getElementById('rc').textContent=r.length;
   document.getElementById('search-results').style.display='block';
